@@ -10,7 +10,6 @@ import { ScrapBoardPage } from '@/features/scrap-board/ScrapBoardPage'
 import { WorldbuildingPage } from '@/features/worldbuilding/WorldbuildingPage'
 import { CharactersPage } from '@/features/characters/CharactersPage'
 import { TimelinePage } from '@/features/timeline/TimelinePage'
-import { PlotPage } from '@/features/plot/PlotPage'
 import { WorkspacePage } from '@/features/workspace/WorkspacePage'
 
 const router = createBrowserRouter([
@@ -24,7 +23,6 @@ const router = createBrowserRouter([
       { path: 'worldbuilding', element: <WorldbuildingPage /> },
       { path: 'characters', element: <CharactersPage /> },
       { path: 'timeline', element: <TimelinePage /> },
-      { path: 'plot', element: <PlotPage /> },
       { path: 'workspace', element: <WorkspacePage /> },
     ],
   },

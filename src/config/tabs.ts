@@ -39,12 +39,6 @@ export const TABS: TabDef[] = [
     description: '진행률 · 회차/복선 · 인과관계 씬 디자이너',
   },
   {
-    path: '/plot',
-    label: '플롯',
-    short: '플롯',
-    description: '발단·전개·위기·절정·결말 5단 플롯 보드',
-  },
-  {
     path: '/workspace',
     label: '워크스페이스',
     short: '집필',
