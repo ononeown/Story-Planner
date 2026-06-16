@@ -16,18 +16,14 @@ import { useForeshadowings } from './useForeshadowings'
 import { EpisodeMeta } from './EpisodeMeta'
 import { SceneCard } from './SceneCard'
 import { ForeshadowRow } from './ForeshadowRow'
-import { TrackerView } from './TrackerView'
 import { SortableEpisodeItem } from './SortableEpisodeItem'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { Segmented } from '@/components/ui/Segmented'
 import { BulkActionBar } from '@/components/ui/BulkActionBar'
 import { PlusIcon } from '@/components/ui/icons'
 import { useBoxSelection } from '@/lib/useBoxSelection'
-
-type View = 'design' | 'tracker'
 
 export function TimelinePage() {
   const { project } = useProject()
@@ -36,7 +32,6 @@ export function TimelinePage() {
   const characters = useCharacters(project.id)
   const foreshadowings = useForeshadowings(project.id)
 
-  const [view, setView] = useState<View>('design')
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const sensors = useSensors(
@@ -81,49 +76,12 @@ export function TimelinePage() {
     setSelectedId(created.id)
   }
 
-  const header = (
-    <PageHeader
-      title="타임라인 & 씬 디자이너"
-      description="회차별 전개와 사건·복선의 인과/지속 설계"
-      actions={
-        <Segmented
-          value={view}
-          onChange={setView}
-          options={[
-            { value: 'design', label: '설계' },
-            { value: 'tracker', label: '트래커' },
-          ]}
-        />
-      }
-    />
-  )
-
-  // ── 트래커 뷰 ──────────────────────────────────────────────
-  if (view === 'tracker') {
-    return (
-      <div className="flex h-full flex-col">
-        {header}
-        <div className="flex-1 overflow-auto px-8 py-8">
-          {scenes.query.isLoading || episodes.list.isLoading ? (
-            <div className="flex justify-center py-16">
-              <Spinner />
-            </div>
-          ) : (
-            <TrackerView
-              episodes={episodeList}
-              scenes={sceneData?.scenes ?? []}
-              foreshadowings={foreshadowings.list.data ?? []}
-            />
-          )}
-        </div>
-      </div>
-    )
-  }
-
-  // ── 설계 뷰 ────────────────────────────────────────────────
   return (
     <div className="flex h-full flex-col">
-      {header}
+      <PageHeader
+        title="타임라인 & 씬 디자이너"
+        description="회차별 전개와 사건·복선의 인과/지속 설계"
+      />
       <div className="flex min-h-0 flex-1">
         {/* 좌측: 회차 리스트 */}
         <div className="flex w-56 shrink-0 flex-col border-r border-line">
