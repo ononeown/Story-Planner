@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { SaveStatus, type SaveState } from '@/components/ui/SaveStatus'
 import { Card } from '@/components/ui/Card'
 import { Field } from '@/components/ui/Field'
-import { Input } from '@/components/ui/Input'
+import { InlineText } from '@/components/ui/InlineText'
 import { Textarea } from '@/components/ui/Textarea'
 import { Spinner } from '@/components/ui/Spinner'
 import type { Synopsis } from '@/types/database'
@@ -105,23 +105,23 @@ export function SynopsisPage() {
           {/* 기본 메타데이터 */}
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field label="작품명">
-              <Input
+              <InlineText
                 value={meta.title}
-                onChange={(e) => onMeta('title', e.target.value)}
+                onCommit={(v) => onMeta('title', v)}
                 placeholder="제목 없는 작품"
               />
             </Field>
             <Field label="장르">
-              <Input
+              <InlineText
                 value={meta.genre}
-                onChange={(e) => onMeta('genre', e.target.value)}
+                onCommit={(v) => onMeta('genre', v)}
                 placeholder="판타지, 로맨스 …"
               />
             </Field>
             <Field label="예상 분량">
-              <Input
+              <InlineText
                 value={meta.expected_length}
-                onChange={(e) => onMeta('expected_length', e.target.value)}
+                onCommit={(v) => onMeta('expected_length', v)}
                 placeholder="예: 100화 / 장편"
               />
             </Field>
