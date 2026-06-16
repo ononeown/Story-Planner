@@ -35,3 +35,6 @@ supabase/.temp
 
 # 로컬 폰트 사본 (CDN 사용하므로 불필요)
 /web
+
+# 무관한 외부 프로젝트 폴더 (이 레포와 별개)
+/pretext-main
