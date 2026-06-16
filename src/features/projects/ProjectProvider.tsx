@@ -20,6 +20,7 @@ interface ProjectValue {
   setProjectId: (id: string) => void
   createProject: () => Promise<Workspace>
   updateProject: (patch: Partial<Workspace>) => Promise<void>
+  deleteProject: (id: string) => Promise<void>
   refresh: () => Promise<void>
 }
 
@@ -103,6 +104,25 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     [currentId],
   )
 
+  const deleteProject = useCallback(
+    async (id: string) => {
+      const { error } = await supabase.from('workspaces').delete().eq('id', id)
+      if (error) {
+        setError(error.message)
+        return
+      }
+      const remaining = (projects ?? []).filter((p) => p.id !== id)
+      // 마지막 작품을 지우면 기본 작품을 다시 생성
+      if (remaining.length === 0) {
+        await load()
+        return
+      }
+      setProjects(remaining)
+      if (currentId === id) setProjectId(remaining[0].id)
+    },
+    [projects, currentId, load, setProjectId],
+  )
+
   if (error) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-canvas px-4">
@@ -128,7 +148,15 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
 
   return (
     <ProjectContext.Provider
-      value={{ projects, project, setProjectId, createProject, updateProject, refresh: load }}
+      value={{
+        projects,
+        project,
+        setProjectId,
+        createProject,
+        updateProject,
+        deleteProject,
+        refresh: load,
+      }}
     >
       {children}
     </ProjectContext.Provider>
