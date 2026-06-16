@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type MouseEvent } from 'react'
 import {
   ReactFlow,
   Background,
@@ -17,7 +17,7 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Spinner } from '@/components/ui/Spinner'
-import { PlusIcon } from '@/components/ui/icons'
+import { PlusIcon, PinIcon, TrashIcon } from '@/components/ui/icons'
 import type { ScrapCard } from '@/types/database'
 
 const nodeTypes: NodeTypes = { postit: PostitNode }
@@ -35,6 +35,7 @@ export function ScrapBoardPage() {
   const [keyword, setKeyword] = useState('')
   const [url, setUrl] = useState('')
   const [scraping, setScraping] = useState(false)
+  const [menu, setMenu] = useState<{ x: number; y: number; card: ScrapCard } | null>(null)
 
   const cards = useMemo(() => list.data ?? [], [list.data])
 
@@ -64,6 +65,16 @@ export function ScrapBoardPage() {
         update.mutate({ id: ch.id, patch: { pos_x: ch.position.x, pos_y: ch.position.y } })
       }
     }
+  }
+
+  function onNodeContextMenu(e: MouseEvent, node: Node) {
+    e.preventDefault()
+    const card = cards.find((c) => c.id === node.id)
+    if (card) setMenu({ x: e.clientX, y: e.clientY, card })
+  }
+
+  function onNodesDelete(deleted: Node[]) {
+    deleted.forEach((n) => remove.mutate(n.id))
   }
 
   function addMemo() {
@@ -149,6 +160,9 @@ export function ScrapBoardPage() {
           <ReactFlow
             nodes={nodes}
             onNodesChange={handleNodesChange}
+            onNodeContextMenu={onNodeContextMenu}
+            onNodesDelete={onNodesDelete}
+            deleteKeyCode={['Delete']}
             nodeTypes={nodeTypes}
             proOptions={{ hideAttribution: true }}
             minZoom={0.2}
@@ -159,6 +173,43 @@ export function ScrapBoardPage() {
             <Background gap={20} color="var(--color-line)" />
             <Controls showInteractive={false} />
           </ReactFlow>
+        )}
+
+        {/* 우클릭 컨텍스트 메뉴 */}
+        {menu && (
+          <>
+            <div
+              className="fixed inset-0 z-40"
+              onClick={() => setMenu(null)}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                setMenu(null)
+              }}
+            />
+            <div
+              className="fixed z-50 w-36 overflow-hidden rounded-lg border border-line bg-canvas py-1 shadow-lg shadow-black/20"
+              style={{ left: menu.x, top: menu.y }}
+            >
+              <button
+                onClick={() => {
+                  update.mutate({ id: menu.card.id, patch: { pinned: !menu.card.pinned } })
+                  setMenu(null)
+                }}
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] text-ink transition-colors hover:bg-surface-2"
+              >
+                <PinIcon width={14} height={14} /> {menu.card.pinned ? '핀 해제' : '핀 고정'}
+              </button>
+              <button
+                onClick={() => {
+                  remove.mutate(menu.card.id)
+                  setMenu(null)
+                }}
+                className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-[13px] text-danger transition-colors hover:bg-danger/10"
+              >
+                <TrashIcon width={14} height={14} /> 삭제
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
