@@ -87,7 +87,6 @@ export function ProjectSwitcher() {
                 <PlusIcon width={13} height={13} /> 새 작품
               </button>
             </div>
-            <p className="px-3 pt-1 text-[11px] text-ink-faint">작품 우클릭 → 삭제</p>
           </div>
         </>
       )}

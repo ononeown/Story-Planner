@@ -48,7 +48,7 @@ export function WorldbuildingPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <PageHeader title="다차원 세계관 위키" description="배경 설정을 구조화해 보관" />
+      <PageHeader title="세계관" description="배경 설정을 구조화해 보관" />
 
       <div className="flex-1 overflow-y-auto px-8 py-8">
         {list.isLoading ? (
@@ -75,9 +75,9 @@ export function WorldbuildingPage() {
                         isOpen && 'rotate-90',
                       )}
                     />
-                    <div className="flex-1">
-                      <h3 className="text-sm font-semibold text-ink">{cat.label}</h3>
-                      <p className="text-xs text-ink-muted">{cat.desc}</p>
+                    <div className="flex-1 space-y-1">
+                      <h3 className="text-sm font-semibold leading-tight text-ink">{cat.label}</h3>
+                      <p className="text-xs leading-relaxed text-ink-muted">{cat.desc}</p>
                     </div>
                     <span className="text-xs text-ink-faint">{items.length}</span>
                   </button>

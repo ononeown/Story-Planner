@@ -1,11 +1,29 @@
+import { useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { TABS } from '@/config/tabs'
 import { useAuth } from '@/features/auth/AuthProvider'
+import { useProject } from '@/features/projects/ProjectProvider'
 import { ProjectSwitcher } from '@/features/projects/ProjectSwitcher'
+import { exportProject } from '@/features/export/exportProject'
+import { DownloadIcon } from '@/components/ui/icons'
+import { Spinner } from '@/components/ui/Spinner'
 
 /** 좌측 세로 탭 내비게이션 (라인 중심 미니멀 UI) */
 export function TabNav() {
   const { user, signOut } = useAuth()
+  const { project } = useProject()
+  const [exporting, setExporting] = useState(false)
+
+  async function handleExport() {
+    setExporting(true)
+    try {
+      await exportProject(project)
+    } catch (e) {
+      alert('내보내기에 실패했습니다: ' + (e instanceof Error ? e.message : String(e)))
+    } finally {
+      setExporting(false)
+    }
+  }
 
   return (
     <nav className="flex w-60 shrink-0 flex-col border-r border-line bg-surface/70 backdrop-blur-xl">
@@ -39,7 +57,16 @@ export function TabNav() {
       </ul>
 
       <div className="border-t border-line px-4 py-3">
-        <p className="truncate text-xs text-ink-faint" title={user?.email ?? ''}>
+        <button
+          type="button"
+          onClick={handleExport}
+          disabled={exporting}
+          className="flex items-center gap-1.5 text-[13px] text-ink-muted transition-colors hover:text-ink disabled:opacity-50"
+        >
+          {exporting ? <Spinner className="h-3.5 w-3.5" /> : <DownloadIcon width={14} height={14} />}
+          내보내기 (.zip)
+        </button>
+        <p className="mt-2.5 truncate text-xs text-ink-faint" title={user?.email ?? ''}>
           {user?.email}
         </p>
         <button

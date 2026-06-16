@@ -183,9 +183,6 @@ export function TimelinePage() {
                 style={sel.marqueeRect}
               />
             )}
-            <p className="px-2 pt-2 text-[11px] text-ink-faint">
-              드래그로 순서 변경 · 범위 드래그·Shift·Ctrl로 다중 선택
-            </p>
           </div>
         </div>
 

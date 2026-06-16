@@ -81,7 +81,7 @@ export function CharactersPage() {
       <div className="flex h-full flex-1 flex-col">
         <PageHeader
           title="캐릭터 데이터베이스"
-          description="드래그 정렬 · 등장 위계 · 범위드래그/Shift/Ctrl 다중 선택"
+          description="인물 프로필과 서사 추적"
           actions={
             <>
               {characters.length > 1 && (
