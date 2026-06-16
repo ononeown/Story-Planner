@@ -5,6 +5,7 @@ import { AuthPage } from '@/features/auth/AuthPage'
 import { ProjectProvider, useProject } from '@/features/projects/ProjectProvider'
 import { FullScreenSpinner } from '@/components/ui/Spinner'
 import { isSupabaseConfigured } from '@/lib/supabase'
+import { AiAssistant } from '@/features/ai/AiAssistant'
 import { SynopsisPage } from '@/features/synopsis/SynopsisPage'
 import { ScrapBoardPage } from '@/features/scrap-board/ScrapBoardPage'
 import { WorldbuildingPage } from '@/features/worldbuilding/WorldbuildingPage'
@@ -33,7 +34,12 @@ const router = createBrowserRouter([
 /** 작품이 바뀌면 라우터를 remount 해 페이지 로컬 상태를 초기화 */
 function AppRouter() {
   const { project } = useProject()
-  return <RouterProvider key={project.id} router={router} />
+  return (
+    <>
+      <RouterProvider key={project.id} router={router} />
+      <AiAssistant />
+    </>
+  )
 }
 
 /** 로그인 여부에 따라 앱 본체 또는 로그인 화면을 보여주는 게이트 */
