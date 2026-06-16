@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Fragment, StickyColor } from '@/types/database'
 import { useDebouncedCallback } from '@/lib/useDebouncedCallback'
 import { TrashIcon } from '@/components/ui/icons'
@@ -22,11 +22,20 @@ interface Props {
 export function FragmentCard({ fragment, onChange, onDelete }: Props) {
   const [title, setTitle] = useState(fragment.title ?? '')
   const [content, setContent] = useState(fragment.content ?? '')
+  const contentRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     setTitle(fragment.title ?? '')
     setContent(fragment.content ?? '')
   }, [fragment.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 내용 양에 맞춰 높이 자동 확장 (내부 스크롤 없이)
+  useEffect(() => {
+    const el = contentRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [content])
 
   const save = useDebouncedCallback((patch: Partial<Fragment>) => onChange(patch))
 
@@ -42,14 +51,15 @@ export function FragmentCard({ fragment, onChange, onDelete }: Props) {
         className="mb-1 w-full bg-transparent text-sm font-semibold text-ink outline-none placeholder:text-ink/40"
       />
       <textarea
+        ref={contentRef}
         value={content}
         onChange={(e) => {
           setContent(e.target.value)
           save({ content: e.target.value })
         }}
-        rows={5}
+        rows={3}
         placeholder="보고 싶은 장면을 썰처럼 자유롭게…"
-        className="w-full resize-none bg-transparent text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink/40"
+        className="w-full resize-none overflow-hidden bg-transparent text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink/40"
       />
 
       <div className="mt-2 flex items-center justify-between opacity-0 transition-opacity group-hover:opacity-100">
