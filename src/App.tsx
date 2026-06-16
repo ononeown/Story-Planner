@@ -1,5 +1,9 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { AuthProvider, useAuth } from '@/features/auth/AuthProvider'
+import { AuthPage } from '@/features/auth/AuthPage'
+import { ProjectProvider } from '@/features/projects/ProjectProvider'
+import { FullScreenSpinner } from '@/components/ui/Spinner'
 import { SynopsisPage } from '@/features/synopsis/SynopsisPage'
 import { ScrapBoardPage } from '@/features/scrap-board/ScrapBoardPage'
 import { WorldbuildingPage } from '@/features/worldbuilding/WorldbuildingPage'
@@ -23,6 +27,24 @@ const router = createBrowserRouter([
   },
 ])
 
+/** 로그인 여부에 따라 앱 본체 또는 로그인 화면을 보여주는 게이트 */
+function AuthGate() {
+  const { session, loading } = useAuth()
+
+  if (loading) return <FullScreenSpinner label="불러오는 중…" />
+  if (!session) return <AuthPage />
+
+  return (
+    <ProjectProvider>
+      <RouterProvider router={router} />
+    </ProjectProvider>
+  )
+}
+
 export function App() {
-  return <RouterProvider router={router} />
+  return (
+    <AuthProvider>
+      <AuthGate />
+    </AuthProvider>
+  )
 }
