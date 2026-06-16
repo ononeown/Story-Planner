@@ -1,4 +1,13 @@
 import { useEffect, useState } from 'react'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useProject } from '@/features/projects/ProjectProvider'
 import { useCharacters } from '@/features/characters/useCharacters'
 import { useEpisodes } from './useEpisodes'
@@ -8,13 +17,14 @@ import { EpisodeMeta } from './EpisodeMeta'
 import { SceneCard } from './SceneCard'
 import { ForeshadowRow } from './ForeshadowRow'
 import { TrackerView } from './TrackerView'
+import { SortableEpisodeItem } from './SortableEpisodeItem'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Segmented } from '@/components/ui/Segmented'
-import { PlusIcon, TrashIcon } from '@/components/ui/icons'
-import { cn } from '@/lib/cn'
+import { BulkActionBar } from '@/components/ui/BulkActionBar'
+import { PlusIcon } from '@/components/ui/icons'
 
 type View = 'design' | 'tracker'
 
@@ -27,12 +37,45 @@ export function TimelinePage() {
 
   const [view, setView] = useState<View>('design')
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [bulk, setBulk] = useState<Set<string>>(new Set())
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  )
 
   const episodeList = episodes.list.data ?? []
   useEffect(() => {
     if (episodeList.length === 0) setSelectedId(null)
     else if (!episodeList.some((e) => e.id === selectedId)) setSelectedId(episodeList[0].id)
   }, [episodeList, selectedId])
+
+  function toggleBulk(id: string) {
+    setBulk((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function deleteBulk() {
+    const ids = [...bulk]
+    if (ids.length === 0) return
+    if (!confirm(`선택한 회차 ${ids.length}개를 삭제할까요? 각 회차의 씬·복선도 함께 삭제되며 되돌릴 수 없습니다.`))
+      return
+    episodes.removeMany.mutate(ids)
+    setBulk(new Set())
+  }
+
+  function handleEpisodeDragEnd(e: DragEndEvent) {
+    const { active, over } = e
+    if (!over || active.id === over.id) return
+    const ids = episodeList.map((ep) => ep.id)
+    const from = ids.indexOf(String(active.id))
+    const to = ids.indexOf(String(over.id))
+    if (from < 0 || to < 0) return
+    episodes.reorder.mutate(arrayMove(ids, from, to))
+  }
 
   const selected = episodeList.find((e) => e.id === selectedId) ?? null
   const sceneData = scenes.query.data
@@ -43,11 +86,6 @@ export function TimelinePage() {
   async function addEpisode() {
     const created = await episodes.create.mutateAsync()
     setSelectedId(created.id)
-  }
-
-  function deleteEpisode(id: string, no: number) {
-    if (!confirm(`${no}화를 삭제할까요? 이 회차의 씬도 함께 삭제됩니다.`)) return
-    episodes.remove.mutate(id)
   }
 
   const header = (
@@ -116,41 +154,33 @@ export function TimelinePage() {
                 아직 회차가 없습니다. 위 + 로 추가하세요.
               </p>
             ) : (
-              <ul className="space-y-0.5">
-                {episodeList.map((e) => (
-                  <li key={e.id}>
-                    <button
-                      onClick={() => setSelectedId(e.id)}
-                      className={cn(
-                        'group flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors',
-                        selectedId === e.id
-                          ? 'bg-surface-2 text-ink'
-                          : 'text-ink-muted hover:bg-surface-2/60 hover:text-ink',
-                      )}
-                    >
-                      <span className="shrink-0 text-[11px] tabular-nums text-ink-faint">
-                        {e.episode_no}
-                      </span>
-                      <span className="flex-1 truncate text-[13px]">
-                        {e.title || '제목 없음'}
-                      </span>
-                      <span
-                        role="button"
-                        tabIndex={-1}
-                        onClick={(ev) => {
-                          ev.stopPropagation()
-                          deleteEpisode(e.id, e.episode_no)
-                        }}
-                        className="shrink-0 rounded p-0.5 text-ink-faint opacity-0 hover:text-danger group-hover:opacity-100"
-                        aria-label="회차 삭제"
-                      >
-                        <TrashIcon width={13} height={13} />
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleEpisodeDragEnd}
+              >
+                <SortableContext
+                  items={episodeList.map((e) => e.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div className="space-y-0.5">
+                    {episodeList.map((e) => (
+                      <SortableEpisodeItem
+                        key={e.id}
+                        episode={e}
+                        selected={selectedId === e.id}
+                        bulkSelected={bulk.has(e.id)}
+                        onSelect={() => setSelectedId(e.id)}
+                        onToggleBulk={() => toggleBulk(e.id)}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             )}
+            <p className="px-2 pt-2 text-[11px] text-ink-faint">
+              드래그로 순서 변경 · 체크 후 일괄 삭제
+            </p>
           </div>
         </div>
 
@@ -250,6 +280,13 @@ export function TimelinePage() {
           )}
         </div>
       </div>
+
+      <BulkActionBar
+        count={bulk.size}
+        noun="회차"
+        onDelete={deleteBulk}
+        onClear={() => setBulk(new Set())}
+      />
     </div>
   )
 }

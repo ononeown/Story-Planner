@@ -92,5 +92,13 @@ export function useCharacters(workspaceId: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
   })
 
-  return { list, create, update, remove, reorder }
+  const removeMany = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from('characters').delete().in('id', ids)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+  })
+
+  return { list, create, update, remove, removeMany, reorder }
 }

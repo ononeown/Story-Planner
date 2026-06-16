@@ -61,5 +61,43 @@ export function useEpisodes(workspaceId: string) {
     onSuccess: () => qc.invalidateQueries({ queryKey: key }),
   })
 
-  return { list, create, update, remove }
+  const removeMany = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const { error } = await supabase.from('episodes').delete().in('id', ids)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: key }),
+  })
+
+  /** 회차 순서 변경: 주어진 id 순서대로 episode_no(1..N)·sort_order 재부여 */
+  const reorder = useMutation({
+    mutationFn: async (orderedIds: string[]) => {
+      await Promise.all(
+        orderedIds.map((id, i) =>
+          supabase.from('episodes').update({ episode_no: i + 1, sort_order: i }).eq('id', id),
+        ),
+      )
+    },
+    onMutate: async (orderedIds) => {
+      await qc.cancelQueries({ queryKey: key })
+      const prev = qc.getQueryData<Episode[]>(key)
+      qc.setQueryData<Episode[]>(key, (old) => {
+        if (!old) return old
+        const byId = new Map(old.map((e) => [e.id, e]))
+        return orderedIds
+          .map((id, i) => {
+            const e = byId.get(id)
+            return e ? { ...e, episode_no: i + 1, sort_order: i } : null
+          })
+          .filter((e): e is Episode => e !== null)
+      })
+      return { prev }
+    },
+    onError: (_e, _v, ctx) => {
+      if (ctx?.prev) qc.setQueryData(key, ctx.prev)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: key }),
+  })
+
+  return { list, create, update, remove, removeMany, reorder }
 }

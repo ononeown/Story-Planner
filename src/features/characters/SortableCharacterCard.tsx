@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Character } from '@/types/database'
@@ -7,9 +8,11 @@ import { cn } from '@/lib/cn'
 interface Props {
   character: Character
   selected: boolean
+  bulkSelected: boolean
   tier: Tier
   count: number
   onSelect: () => void
+  onToggleBulk: () => void
 }
 
 const avatarByTier: Record<Tier, string> = {
@@ -26,7 +29,15 @@ const badgeByTier: Record<Tier, string> = {
   none: 'text-ink-faint',
 }
 
-export function SortableCharacterCard({ character: c, selected, tier, count, onSelect }: Props) {
+export function SortableCharacterCard({
+  character: c,
+  selected,
+  bulkSelected,
+  tier,
+  count,
+  onSelect,
+  onToggleBulk,
+}: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: c.id,
   })
@@ -37,22 +48,55 @@ export function SortableCharacterCard({ character: c, selected, tier, count, onS
     opacity: isDragging ? 0.4 : 1,
   }
 
+  function onKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      onSelect()
+    }
+  }
+
   return (
-    <button
+    <div
       ref={setNodeRef}
       style={style}
-      onClick={onSelect}
       {...attributes}
       {...listeners}
+      role="button"
+      tabIndex={0}
+      onClick={onSelect}
+      onKeyDown={onKeyDown}
       className={cn(
-        'flex touch-none flex-col items-start gap-3 rounded-xl border bg-surface p-4 text-left transition-colors',
-        selected
-          ? 'border-accent/60 ring-1 ring-accent/40'
-          : tier === 'lead'
-            ? 'border-accent/30 hover:border-accent/50'
-            : 'border-line hover:border-ink-faint/50 hover:bg-surface-2/50',
+        'group relative flex touch-none cursor-pointer flex-col items-start gap-3 rounded-xl border bg-surface p-4 text-left transition-colors',
+        bulkSelected
+          ? 'border-accent ring-1 ring-accent/40'
+          : selected
+            ? 'border-accent/60 ring-1 ring-accent/40'
+            : tier === 'lead'
+              ? 'border-accent/30 hover:border-accent/50'
+              : 'border-line hover:border-ink-faint/50 hover:bg-surface-2/50',
       )}
     >
+      {/* 다중 선택 체크박스 */}
+      <span
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation()
+          onToggleBulk()
+        }}
+        className={cn(
+          'absolute right-2.5 top-2.5 transition-opacity',
+          bulkSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+        )}
+      >
+        <input
+          type="checkbox"
+          checked={bulkSelected}
+          readOnly
+          className="h-4 w-4 cursor-pointer accent-accent"
+          aria-label="선택"
+        />
+      </span>
+
       <span
         className={cn(
           'flex items-center justify-center rounded-full font-semibold',
@@ -78,6 +122,6 @@ export function SortableCharacterCard({ character: c, selected, tier, count, onS
           {count > 0 && ` · ${count}회 등장`}
         </p>
       </div>
-    </button>
+    </div>
   )
 }
