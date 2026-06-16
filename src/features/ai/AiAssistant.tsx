@@ -80,7 +80,11 @@ export function AiAssistant() {
     setPanel({ role, status: 'loading', text: '' })
     try {
       const ctx = role.needsContext ? await getContext() : ''
-      const text = await askGemini(role.system, role.buildUser(selection, ctx))
+      const text = await askGemini(role.system, role.buildUser(selection, ctx), {
+        model: role.model,
+        temperature: role.temperature,
+        maxOutputTokens: role.maxOutputTokens,
+      })
       setPanel({ role, status: 'done', text })
     } catch (e) {
       setPanel({ role, status: 'error', text: e instanceof Error ? e.message : String(e) })
