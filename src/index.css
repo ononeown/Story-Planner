@@ -53,21 +53,25 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* 얇고 은은한 스크롤바 (Apple 오버레이 느낌) */
+/* 최소 오버레이 스크롤바 — 트랙 없이 짧고 옅은 thumb 로 위치만 표시 */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-surface-2) transparent;
+  scrollbar-color: rgba(60, 60, 67, 0.28) transparent;
 }
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+  background: transparent;
 }
 *::-webkit-scrollbar-thumb {
-  background: var(--color-surface-2);
+  background: rgba(60, 60, 67, 0.28);
   border-radius: 9999px;
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--color-ink-faint);
+  background: rgba(60, 60, 67, 0.5);
 }
 
 :focus-visible {
