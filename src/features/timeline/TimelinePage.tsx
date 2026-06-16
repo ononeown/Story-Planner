@@ -79,7 +79,7 @@ export function TimelinePage() {
   return (
     <div className="flex h-full flex-col">
       <PageHeader
-        title="타임라인 & 씬 디자이너"
+        title="사건 개요"
         description="회차별 전개와 사건·복선의 인과/지속 설계"
       />
       <div className="flex min-h-0 flex-1">

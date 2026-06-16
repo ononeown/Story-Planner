@@ -33,16 +33,22 @@ export const TABS: TabDef[] = [
     description: '프로필 · 관계도 · 인물 변화표 · 등장표',
   },
   {
-    path: '/timeline',
+    path: '/digest',
     label: '타임라인',
     short: '타임라인',
+    description: '회차별 핵심 전개 + 사건·복선 트래커',
+  },
+  {
+    path: '/timeline',
+    label: '사건 개요',
+    short: '사건 개요',
     description: '진행률 · 회차/복선 · 인과관계 씬 디자이너',
   },
   {
-    path: '/digest',
-    label: '회차정리',
-    short: '회차정리',
-    description: '회차별 핵심 전개 스크롤 타임라인',
+    path: '/fragments',
+    label: '장면 조각',
+    short: '장면 조각',
+    description: '보고 싶은 장면을 조각글로 — 사건의 씨앗',
   },
   {
     path: '/workspace',

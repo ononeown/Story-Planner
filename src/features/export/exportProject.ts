@@ -161,13 +161,14 @@ function sanitize(name: string): string {
 export async function exportProject(ws: Workspace): Promise<void> {
   const id = ws.id
 
-  const [synRes, scrapRes, worldRes, charRes, epRes, sceneRes] = await Promise.all([
+  const [synRes, scrapRes, worldRes, charRes, epRes, sceneRes, fragRes] = await Promise.all([
     supabase.from('synopsis').select('*').eq('workspace_id', id).maybeSingle(),
     supabase.from('scrap_cards').select('*').eq('workspace_id', id).order('created_at'),
     supabase.from('worldbuilding').select('*').eq('workspace_id', id).order('sort_order'),
     supabase.from('characters').select('*').eq('workspace_id', id).order('sort_order'),
     supabase.from('episodes').select('*').eq('workspace_id', id).order('episode_no'),
     supabase.from('scenes').select('*').eq('workspace_id', id),
+    supabase.from('fragments').select('*').eq('workspace_id', id).order('created_at'),
   ])
 
   const synopsis = (synRes.data as Synopsis | null) ?? null
@@ -176,6 +177,7 @@ export async function exportProject(ws: Workspace): Promise<void> {
   const chars = (charRes.data as Character[]) ?? []
   const eps = (epRes.data as Episode[]) ?? []
   const scenes = (sceneRes.data as Scene[]) ?? []
+  const fragments = (fragRes.data as { title: string | null; content: string | null }[]) ?? []
 
   const sceneIds = scenes.map((s) => s.id)
   const epIds = eps.map((e) => e.id)
@@ -217,6 +219,16 @@ export async function exportProject(ws: Workspace): Promise<void> {
   zip.file('세계관.md', buildWorld(world))
   zip.file('인물.md', buildCharacters(chars))
   zip.file('타임라인.md', buildTimeline(eps, foreshadows))
+
+  if (fragments.length > 0) {
+    let fmd = `# 장면 조각${nl}${nl}`
+    for (const f of fragments) {
+      if (f.title?.trim()) fmd += `## ${f.title.trim()}${nl}${nl}`
+      if (f.content?.trim()) fmd += `${f.content.trim()}${nl}${nl}`
+      fmd += `---${nl}${nl}`
+    }
+    zip.file('장면 조각.md', fmd)
+  }
 
   const epFolder = zip.folder('회차')!
   for (const e of eps) {

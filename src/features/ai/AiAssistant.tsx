@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { askGemini, isGeminiConfigured } from '@/lib/gemini'
 import { useProject } from '@/features/projects/ProjectProvider'
 import { AI_ROLES, type AiRole } from './roles'
 import { SparkleIcon, CloseIcon } from '@/components/ui/icons'
-import { Spinner } from '@/components/ui/Spinner'
+import { Button } from '@/components/ui/Button'
 
 interface Menu {
   x: number
@@ -13,14 +12,16 @@ interface Menu {
 }
 interface Panel {
   role: AiRole
-  status: 'loading' | 'done' | 'error'
-  text: string
+  message: string
+  prompt: string
 }
 
+const GEMINI_URL = 'https://gemini.google.com/app'
+
 /**
- * 전역 AI 집필 보조.
- * 텍스트 선택 후 우클릭 → 역할 메뉴 → 우측 말풍선 응답.
- * (대강 버전 — 디자인은 추후 교체)
+ * 전역 AI 집필 보조 (API 미사용 — 결제된 Gemini 웹 활용).
+ * 텍스트 선택 후 우클릭 → 역할 선택 → 프롬프트 자동 조립+복사 + Gemini 탭 열기.
+ * 사용자는 Gemini 입력창에서 Ctrl+V → Enter.
  */
 export function AiAssistant() {
   const { project } = useProject()
@@ -28,11 +29,9 @@ export function AiAssistant() {
   const [panel, setPanel] = useState<Panel | null>(null)
   const ctxCache = useRef<Record<string, string>>({})
 
-  // 텍스트 선택 + 우클릭 → 메뉴
   useEffect(() => {
     function onContextMenu(e: MouseEvent) {
       const sel = window.getSelection()?.toString().trim() ?? ''
-      // 선택 텍스트가 있을 때만 가로채기 (없으면 기본 메뉴 허용)
       if (!sel) return
       e.preventDefault()
       setMenu({ x: e.clientX, y: e.clientY, selection: sel })
@@ -41,7 +40,6 @@ export function AiAssistant() {
     return () => document.removeEventListener('contextmenu', onContextMenu)
   }, [])
 
-  // 작품 설정 컨텍스트 (작품당 1회 조회 후 캐시)
   const getContext = useCallback(async (): Promise<string> => {
     if (ctxCache.current[project.id]) return ctxCache.current[project.id]
     const [syn, chars, eps] = await Promise.all([
@@ -77,18 +75,15 @@ export function AiAssistant() {
     if (!menu) return
     const selection = menu.selection
     setMenu(null)
-    setPanel({ role, status: 'loading', text: '' })
-    try {
-      const ctx = role.needsContext ? await getContext() : ''
-      const text = await askGemini(role.system, role.buildUser(selection, ctx), {
-        model: role.model,
-        temperature: role.temperature,
-        maxOutputTokens: role.maxOutputTokens,
-      })
-      setPanel({ role, status: 'done', text })
-    } catch (e) {
-      setPanel({ role, status: 'error', text: e instanceof Error ? e.message : String(e) })
-    }
+    const ctx = role.needsContext ? await getContext() : ''
+    const prompt = `${role.system}\n\n${role.buildUser(selection, ctx)}`
+    await navigator.clipboard.writeText(prompt).catch(() => {})
+    window.open(GEMINI_URL, '_blank', 'noopener')
+    setPanel({
+      role,
+      prompt,
+      message: '프롬프트를 복사했어요. 열린 Gemini 탭 입력창에서 Ctrl+V → Enter 하세요.',
+    })
   }
 
   return (
@@ -114,16 +109,13 @@ export function AiAssistant() {
                 <span className="block text-[11px] text-ink-faint">{role.hint}</span>
               </button>
             ))}
-            {!isGeminiConfigured && (
-              <p className="px-3 py-1.5 text-[11px] text-danger">API 키 미설정</p>
-            )}
           </div>
         </>
       )}
 
-      {/* 우측 말풍선 응답 패널 */}
+      {/* 우측 안내 말풍선 */}
       {panel && (
-        <div className="fixed right-4 top-20 z-50 flex w-[360px] max-w-[calc(100vw-2rem)] gap-2">
+        <div className="fixed right-4 top-20 z-50 flex w-[340px] max-w-[calc(100vw-2rem)] gap-2">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-white">
             <SparkleIcon width={16} height={16} />
           </div>
@@ -135,31 +127,16 @@ export function AiAssistant() {
             >
               <CloseIcon width={14} height={14} />
             </button>
-            <p className="mb-2 text-[11px] font-semibold text-accent">{panel.role.label}</p>
-            {panel.status === 'loading' ? (
-              <div className="flex items-center gap-2 py-3 text-sm text-ink-muted">
-                <Spinner className="h-4 w-4" /> 생각 중…
-              </div>
-            ) : (
-              <>
-                <div
-                  className={
-                    'max-h-[60vh] overflow-y-auto whitespace-pre-wrap text-[13px] leading-relaxed ' +
-                    (panel.status === 'error' ? 'text-danger' : 'text-ink')
-                  }
-                >
-                  {panel.text}
-                </div>
-                {panel.status === 'done' && (
-                  <button
-                    onClick={() => navigator.clipboard.writeText(panel.text)}
-                    className="mt-3 text-[12px] text-ink-muted hover:text-ink"
-                  >
-                    복사
-                  </button>
-                )}
-              </>
-            )}
+            <p className="mb-1 text-[11px] font-semibold text-accent">{panel.role.label}</p>
+            <p className="text-[13px] leading-relaxed text-ink">{panel.message}</p>
+            <div className="mt-3 flex gap-2">
+              <Button size="sm" variant="secondary" onClick={() => navigator.clipboard.writeText(panel.prompt)}>
+                프롬프트 다시 복사
+              </Button>
+              <Button size="sm" onClick={() => window.open(GEMINI_URL, '_blank', 'noopener')}>
+                Gemini 열기
+              </Button>
+            </div>
           </div>
         </div>
       )}

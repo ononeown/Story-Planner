@@ -12,6 +12,7 @@ import { WorldbuildingPage } from '@/features/worldbuilding/WorldbuildingPage'
 import { CharactersPage } from '@/features/characters/CharactersPage'
 import { TimelinePage } from '@/features/timeline/TimelinePage'
 import { EpisodeDigestPage } from '@/features/episodes-digest/EpisodeDigestPage'
+import { FragmentsPage } from '@/features/fragments/FragmentsPage'
 import { WorkspacePage } from '@/features/workspace/WorkspacePage'
 
 const router = createBrowserRouter([
@@ -26,6 +27,7 @@ const router = createBrowserRouter([
       { path: 'characters', element: <CharactersPage /> },
       { path: 'timeline', element: <TimelinePage /> },
       { path: 'digest', element: <EpisodeDigestPage /> },
+      { path: 'fragments', element: <FragmentsPage /> },
       { path: 'workspace', element: <WorkspacePage /> },
     ],
   },

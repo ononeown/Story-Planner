@@ -142,6 +142,16 @@ export interface Scene {
   pos_y: number
 }
 
+export interface Fragment {
+  id: string
+  workspace_id: string
+  title: string | null
+  content: string | null
+  color: StickyColor
+  sort_order: number
+  created_at: string
+}
+
 export interface CardLink {
   id: string
   scrap_card_id: string

@@ -226,6 +226,20 @@ create table if not exists public.scene_links (
 );
 
 -- =============================================================
+-- 7b. fragments (장면 조각 / 조각글)
+-- =============================================================
+create table if not exists public.fragments (
+  id           uuid primary key default gen_random_uuid(),
+  workspace_id uuid not null references public.workspaces(id) on delete cascade,
+  title        text,
+  content      text,
+  color        text not null default 'yellow',
+  sort_order   int not null default 0,
+  created_at   timestamptz not null default now()
+);
+create index if not exists idx_fragments_ws on public.fragments(workspace_id);
+
+-- =============================================================
 -- 8. card_links (스크랩 카드 다형성 귀속, Tab6 드롭)
 -- =============================================================
 create table if not exists public.card_links (
@@ -255,6 +269,7 @@ alter table public.foreshadowings      enable row level security;
 alter table public.character_arcs      enable row level security;
 alter table public.episode_characters  enable row level security;
 alter table public.scenes              enable row level security;
+alter table public.fragments           enable row level security;
 alter table public.scene_characters    enable row level security;
 alter table public.scene_links         enable row level security;
 alter table public.card_links          enable row level security;
@@ -269,7 +284,7 @@ declare t text;
 begin
   foreach t in array array[
     'synopsis','scrap_cards','tags','worldbuilding','characters',
-    'character_relations','episodes','scenes'
+    'character_relations','episodes','scenes','fragments'
   ] loop
     execute format($f$
       create policy "%1$s_owner_all" on public.%1$I

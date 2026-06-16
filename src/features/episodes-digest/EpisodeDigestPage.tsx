@@ -21,7 +21,7 @@ export function EpisodeDigestPage() {
   return (
     <div className="flex h-full flex-col">
       <PageHeader
-        title="회차정리"
+        title="타임라인"
         description="핵심 전개와 사건·복선 트래커"
         actions={
           <Button size="sm" onClick={() => create.mutate()} disabled={create.isPending}>
