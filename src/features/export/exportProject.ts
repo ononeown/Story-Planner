@@ -238,6 +238,34 @@ export async function exportProject(ws: Workspace): Promise<void> {
     epFolder.file(`${sanitize(`${e.episode_no}화 ${e.title ?? ''}`)}.md`, md)
   }
 
+  // 가져오기(복원)용 기계 판독 데이터
+  zip.file(
+    'project.json',
+    JSON.stringify(
+      {
+        version: 1,
+        workspace: {
+          title: ws.title,
+          genre: ws.genre,
+          expected_length: ws.expected_length,
+          canvas_viewport: ws.canvas_viewport,
+        },
+        synopsis,
+        characters: chars,
+        episodes: eps,
+        scenes,
+        worldbuilding: world,
+        scrap_cards: scraps,
+        fragments,
+        scene_characters: scCharRes.data ?? [],
+        scene_links: scLinkRes.data ?? [],
+        foreshadowings: foreshadows,
+      },
+      null,
+      2,
+    ),
+  )
+
   const blob = await zip.generateAsync({ type: 'blob' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')

@@ -1,18 +1,21 @@
-import { useState } from 'react'
+import { useRef, useState, type ChangeEvent } from 'react'
 import { NavLink } from 'react-router-dom'
 import { TABS } from '@/config/tabs'
 import { useAuth } from '@/features/auth/AuthProvider'
 import { useProject } from '@/features/projects/ProjectProvider'
 import { ProjectSwitcher } from '@/features/projects/ProjectSwitcher'
 import { exportProject } from '@/features/export/exportProject'
-import { DownloadIcon } from '@/components/ui/icons'
+import { importProject } from '@/features/export/importProject'
+import { DownloadIcon, PlusIcon } from '@/components/ui/icons'
 import { Spinner } from '@/components/ui/Spinner'
 
 /** 좌측 세로 탭 내비게이션 (라인 중심 미니멀 UI) */
 export function TabNav() {
   const { user, signOut } = useAuth()
-  const { project } = useProject()
+  const { project, refresh, setProjectId } = useProject()
   const [exporting, setExporting] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   async function handleExport() {
     setExporting(true)
@@ -22,6 +25,22 @@ export function TabNav() {
       alert('내보내기에 실패했습니다: ' + (e instanceof Error ? e.message : String(e)))
     } finally {
       setExporting(false)
+    }
+  }
+
+  async function handleImport(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    setImporting(true)
+    try {
+      const newId = await importProject(file, user.id)
+      await refresh()
+      setProjectId(newId)
+    } catch (err) {
+      alert('가져오기에 실패했습니다: ' + (err instanceof Error ? err.message : String(err)))
+    } finally {
+      setImporting(false)
+      if (fileRef.current) fileRef.current.value = ''
     }
   }
 
@@ -66,6 +85,22 @@ export function TabNav() {
           {exporting ? <Spinner className="h-3.5 w-3.5" /> : <DownloadIcon width={14} height={14} />}
           내보내기 (.zip)
         </button>
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={importing}
+          className="mt-1.5 flex items-center gap-1.5 text-[13px] text-ink-muted transition-colors hover:text-ink disabled:opacity-50"
+        >
+          {importing ? <Spinner className="h-3.5 w-3.5" /> : <PlusIcon width={14} height={14} />}
+          가져오기 (새 작품)
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".zip"
+          className="hidden"
+          onChange={handleImport}
+        />
         <p className="mt-2.5 truncate text-xs text-ink-faint" title={user?.email ?? ''}>
           {user?.email}
         </p>
