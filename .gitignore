@@ -32,3 +32,6 @@ Thumbs.db
 # supabase
 supabase/.temp
 .branches
+
+# 로컬 폰트 사본 (CDN 사용하므로 불필요)
+/web
