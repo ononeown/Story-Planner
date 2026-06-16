@@ -198,16 +198,17 @@ create table if not exists public.episode_characters (
 -- 7. scenes (Tab5 씬 디자이너)
 -- =============================================================
 create table if not exists public.scenes (
-  id           uuid primary key default gen_random_uuid(),
-  workspace_id uuid not null references public.workspaces(id) on delete cascade,
-  episode_id   uuid references public.episodes(id) on delete set null,
-  title        text not null default '',
-  detail       text,
-  location     text,
-  purpose      text,
-  result       text,
-  pos_x        numeric not null default 0,
-  pos_y        numeric not null default 0
+  id              uuid primary key default gen_random_uuid(),
+  workspace_id    uuid not null references public.workspaces(id) on delete cascade,
+  episode_id      uuid references public.episodes(id) on delete set null,
+  end_episode_id  uuid references public.episodes(id) on delete set null,
+  title           text not null default '',
+  detail          text,
+  location        text,
+  purpose         text,
+  result          text,
+  pos_x           numeric not null default 0,
+  pos_y           numeric not null default 0
 );
 create index if not exists idx_scenes_ws on public.scenes(workspace_id);
 

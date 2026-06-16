@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { Character, Scene } from '@/types/database'
+import type { Character, Episode, Scene } from '@/types/database'
 import { useDebouncedCallback } from '@/lib/useDebouncedCallback'
 import { Input } from '@/components/ui/Input'
 import { Textarea } from '@/components/ui/Textarea'
@@ -11,6 +11,7 @@ interface Props {
   scene: Scene
   characters: Character[]
   otherScenes: Scene[]
+  episodes: Episode[]
   relatedCharIds: string[]
   nextSceneIds: string[]
   onChange: (patch: Partial<Scene>) => void
@@ -25,6 +26,7 @@ export function SceneCard({
   scene,
   characters,
   otherScenes,
+  episodes,
   relatedCharIds,
   nextSceneIds,
   onChange,
@@ -32,6 +34,10 @@ export function SceneCard({
   onToggleLink,
   onDelete,
 }: Props) {
+  // 지속 회차 후보: 시작 회차 이후(같거나 큰 번호)
+  const startNo =
+    episodes.find((e) => e.id === scene.episode_id)?.episode_no ?? 0
+  const endOptions = episodes.filter((e) => e.episode_no >= startNo)
   const [title, setTitle] = useState(scene.title)
   const [text, setText] = useState<Record<TextKey, string>>({
     detail: scene.detail ?? '',
@@ -77,6 +83,24 @@ export function SceneCard({
         >
           <TrashIcon />
         </button>
+      </div>
+
+      {/* 지속 회차 (트래커에서 막대 길이로 표현) */}
+      <div className="mb-3 flex items-center gap-2 text-[13px] text-ink-muted">
+        <span>지속</span>
+        <select
+          value={scene.end_episode_id ?? ''}
+          onChange={(e) => onChange({ end_episode_id: e.target.value || null })}
+          className="h-8 rounded-md border border-line bg-canvas px-2 text-[13px] text-ink focus:outline-none"
+          title="이 사건이 어느 회차까지 지속되는지"
+        >
+          <option value="">이 회차만 (단발성)</option>
+          {endOptions.map((ep) => (
+            <option key={ep.id} value={ep.id}>
+              ~ {ep.episode_no}화까지
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="space-y-3">

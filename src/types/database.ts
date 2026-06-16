@@ -132,6 +132,7 @@ export interface Scene {
   id: string
   workspace_id: string
   episode_id: string | null
+  end_episode_id: string | null
   title: string
   detail: string | null
   location: string | null
