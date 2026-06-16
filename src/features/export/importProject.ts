@@ -110,8 +110,8 @@ export async function importProject(file: File, userId: string): Promise<string>
     (data.scrap_cards ?? []).map((c: any) => ({
       id: uid(), workspace_id: wsId, kind: c.kind ?? 'memo', url: c.url, title: c.title,
       description: c.description, image_url: c.image_url, body: c.body, color: c.color ?? 'yellow',
-      pinned: c.pinned ?? false, pos_x: c.pos_x ?? 0, pos_y: c.pos_y ?? 0,
-      width: c.width ?? 240, height: c.height ?? 160,
+      pinned: c.pinned ?? false, collapsed: c.collapsed ?? false,
+      pos_x: c.pos_x ?? 0, pos_y: c.pos_y ?? 0, width: c.width ?? 240, height: c.height ?? 160,
     })),
   )
 
@@ -120,7 +120,7 @@ export async function importProject(file: File, userId: string): Promise<string>
     'fragments',
     (data.fragments ?? []).map((f: any) => ({
       id: uid(), workspace_id: wsId, title: f.title, content: f.content,
-      color: f.color ?? 'yellow', sort_order: f.sort_order ?? 0,
+      color: f.color ?? 'yellow', collapsed: f.collapsed ?? false, sort_order: f.sort_order ?? 0,
     })),
   )
 

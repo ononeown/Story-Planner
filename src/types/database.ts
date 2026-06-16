@@ -40,6 +40,7 @@ export interface ScrapCard {
   body: string | null
   color: StickyColor
   pinned: boolean
+  collapsed: boolean
   pos_x: number
   pos_y: number
   width: number
@@ -148,6 +149,7 @@ export interface Fragment {
   title: string | null
   content: string | null
   color: StickyColor
+  collapsed: boolean
   sort_order: number
   created_at: string
 }

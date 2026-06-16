@@ -72,6 +72,7 @@ create table if not exists public.scrap_cards (
   body         text,
   color        text not null default 'yellow',
   pinned       boolean not null default false,
+  collapsed    boolean not null default false,
   pos_x        numeric not null default 0,
   pos_y        numeric not null default 0,
   width        numeric not null default 240,
@@ -234,6 +235,7 @@ create table if not exists public.fragments (
   title        text,
   content      text,
   color        text not null default 'yellow',
+  collapsed    boolean not null default false,
   sort_order   int not null default 0,
   created_at   timestamptz not null default now()
 );

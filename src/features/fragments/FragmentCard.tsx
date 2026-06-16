@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import type { Fragment } from '@/types/database'
 import { useDebouncedCallback } from '@/lib/useDebouncedCallback'
-import { TrashIcon, SparkleIcon } from '@/components/ui/icons'
+import { TrashIcon, SparkleIcon, ChevronIcon } from '@/components/ui/icons'
+import { cn } from '@/lib/cn'
 
 interface Props {
   fragment: Fragment
@@ -12,12 +13,22 @@ interface Props {
 export function FragmentCard({ fragment, onChange, onDelete }: Props) {
   const [title, setTitle] = useState(fragment.title ?? '')
   const [content, setContent] = useState(fragment.content ?? '')
+  const [collapsed, setCollapsedState] = useState(fragment.collapsed ?? false)
   const contentRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     setTitle(fragment.title ?? '')
     setContent(fragment.content ?? '')
+    setCollapsedState(fragment.collapsed ?? false)
   }, [fragment.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function toggleCollapsed() {
+    setCollapsedState((prev) => {
+      const next = !prev
+      onChange({ collapsed: next })
+      return next
+    })
+  }
 
   // 내용 양에 맞춰 높이 자동 확장
   useEffect(() => {
@@ -46,26 +57,41 @@ export function FragmentCard({ fragment, onChange, onDelete }: Props) {
       onContextMenu={onContextMenu}
       className="group break-inside-avoid rounded-xl border border-line bg-surface p-4 shadow-sm shadow-black/5 transition-colors hover:border-ink-faint/40"
     >
-      <input
-        value={title}
-        onChange={(e) => {
-          setTitle(e.target.value)
-          save({ title: e.target.value })
-        }}
-        placeholder=""
-        className="mb-1.5 w-full bg-transparent text-sm font-semibold text-ink outline-none"
-      />
-      <textarea
-        ref={contentRef}
-        value={content}
-        onChange={(e) => {
-          setContent(e.target.value)
-          save({ content: e.target.value })
-        }}
-        rows={3}
-        placeholder=""
-        className="w-full resize-none overflow-hidden bg-transparent text-[13px] leading-relaxed text-ink outline-none"
-      />
+      <div className="flex items-start gap-1">
+        <button
+          onClick={toggleCollapsed}
+          className="mt-0.5 shrink-0 rounded p-0.5 text-ink-faint hover:bg-surface-2 hover:text-ink"
+          aria-label={collapsed ? '펼치기' : '접기'}
+        >
+          <ChevronIcon
+            width={14}
+            height={14}
+            className={cn('transition-transform', !collapsed && 'rotate-90')}
+          />
+        </button>
+        <input
+          value={title}
+          onChange={(e) => {
+            setTitle(e.target.value)
+            save({ title: e.target.value })
+          }}
+          placeholder=""
+          className="w-full bg-transparent text-sm font-semibold text-ink outline-none"
+        />
+      </div>
+      {!collapsed && (
+        <textarea
+          ref={contentRef}
+          value={content}
+          onChange={(e) => {
+            setContent(e.target.value)
+            save({ content: e.target.value })
+          }}
+          rows={3}
+          placeholder=""
+          className="mt-1.5 w-full resize-none overflow-hidden bg-transparent text-[13px] leading-relaxed text-ink outline-none"
+        />
+      )}
 
       <div className="mt-2 flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
         <span className="mr-auto flex items-center gap-1 text-[11px] text-ink-faint">

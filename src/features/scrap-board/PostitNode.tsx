@@ -3,7 +3,7 @@ import type { NodeProps } from '@xyflow/react'
 import type { ScrapCard, StickyColor } from '@/types/database'
 import { useDebouncedCallback } from '@/lib/useDebouncedCallback'
 import { useModifierHeld } from '@/lib/useModifierHeld'
-import { PinIcon, TrashIcon } from '@/components/ui/icons'
+import { PinIcon, TrashIcon, ChevronIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
 
 export interface PostitData {
@@ -33,12 +33,23 @@ export function PostitNode({ data }: NodeProps) {
   const { card, dimmed, onChange, onDelete } = data as PostitData
   const [title, setTitle] = useState(card.title ?? '')
   const [body, setBody] = useState(card.body ?? '')
+  const [collapsed, setCollapsedState] = useState(card.collapsed ?? false)
   const bodyRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     setTitle(card.title ?? '')
     setBody(card.body ?? '')
+    setCollapsedState(card.collapsed ?? false)
   }, [card.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 로컬 즉시 반영 + DB 저장(컬럼 없으면 무시됨)
+  function setCollapsed(updater: (v: boolean) => boolean) {
+    setCollapsedState((prev) => {
+      const next = updater(prev)
+      onChange({ collapsed: next })
+      return next
+    })
+  }
 
   // 내용 양에 맞춰 textarea 높이 자동 확장 (내부 스크롤 없이)
   useEffect(() => {
@@ -102,50 +113,56 @@ export function PostitNode({ data }: NodeProps) {
 
       {/* 본문 */}
       <div className={cn('p-3', moveMode && 'pointer-events-none')}>
-        {card.kind === 'link' ? (
-          <div className="space-y-2">
-            {card.image_url && (
-              <img
-                src={card.image_url}
-                alt=""
-                className="h-28 w-full rounded-md object-cover"
-                draggable={false}
-              />
-            )}
-            <input
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value)
-                save({ title: e.target.value })
-              }}
-              className="nodrag w-full bg-transparent text-sm font-semibold text-ink outline-none"
-              placeholder="제목"
+        {/* 제목 줄 + 접기 토글 */}
+        <div className="flex items-start gap-1">
+          <button
+            onClick={() => setCollapsed((v) => !v)}
+            className="nodrag mt-0.5 shrink-0 rounded p-0.5 text-ink/50 hover:bg-black/5 hover:text-ink"
+            aria-label={collapsed ? '펼치기' : '접기'}
+          >
+            <ChevronIcon
+              width={14}
+              height={14}
+              className={cn('transition-transform', !collapsed && 'rotate-90')}
             />
-            {card.description && (
-              <p className="line-clamp-3 text-xs text-ink-muted">{card.description}</p>
-            )}
-            {card.url && (
-              <a
-                href={card.url}
-                target="_blank"
-                rel="noreferrer"
-                className="nodrag block truncate text-[11px] text-accent hover:underline"
-              >
-                {card.url}
-              </a>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            <input
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value)
-                save({ title: e.target.value })
-              }}
-              className="nodrag w-full bg-transparent text-sm font-semibold text-ink outline-none placeholder:text-ink/40"
-              placeholder="제목"
-            />
+          </button>
+          <input
+            value={title}
+            onChange={(e) => {
+              setTitle(e.target.value)
+              save({ title: e.target.value })
+            }}
+            className="nodrag w-full bg-transparent text-sm font-semibold text-ink outline-none placeholder:text-ink/40"
+            placeholder="제목"
+          />
+        </div>
+
+        {!collapsed &&
+          (card.kind === 'link' ? (
+            <div className="mt-2 space-y-2">
+              {card.image_url && (
+                <img
+                  src={card.image_url}
+                  alt=""
+                  className="h-28 w-full rounded-md object-cover"
+                  draggable={false}
+                />
+              )}
+              {card.description && (
+                <p className="line-clamp-3 text-xs text-ink-muted">{card.description}</p>
+              )}
+              {card.url && (
+                <a
+                  href={card.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="nodrag block truncate text-[11px] text-accent hover:underline"
+                >
+                  {card.url}
+                </a>
+              )}
+            </div>
+          ) : (
             <textarea
               ref={bodyRef}
               value={body}
@@ -154,11 +171,10 @@ export function PostitNode({ data }: NodeProps) {
                 save({ body: e.target.value })
               }}
               rows={2}
-              className="nodrag w-full resize-none overflow-hidden bg-transparent text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink/40"
+              className="nodrag mt-1.5 w-full resize-none overflow-hidden bg-transparent text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink/40"
               placeholder="메모를 입력하세요"
             />
-          </div>
-        )}
+          ))}
       </div>
     </div>
   )
