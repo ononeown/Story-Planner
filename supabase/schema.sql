@@ -128,6 +128,8 @@ create table if not exists public.characters (
   lack           text,
   desire         text,
   signature_line text,
+  constant_traits text,
+  variable_traits text,
   portrait_url   text,
   pos_x          numeric not null default 0,
   pos_y          numeric not null default 0,

@@ -13,19 +13,24 @@ import { useCharacters } from './useCharacters'
 import { useCharacterAppearances, tierOf } from './useCharacterAppearances'
 import { SortableCharacterCard } from './SortableCharacterCard'
 import { CharacterDetailPanel } from './CharacterDetailPanel'
+import { RelationshipMap } from './RelationshipMap'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { BulkActionBar } from '@/components/ui/BulkActionBar'
+import { Segmented } from '@/components/ui/Segmented'
 import { PlusIcon } from '@/components/ui/icons'
 import { useBoxSelection } from '@/lib/useBoxSelection'
+
+type View = 'grid' | 'map'
 
 export function CharactersPage() {
   const { project } = useProject()
   const { list, create, update, remove, removeMany, reorder } = useCharacters(project.id)
   const appearances = useCharacterAppearances(project.id)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [view, setView] = useState<View>('grid')
 
   const characters = list.data ?? []
   const selected = characters.find((c) => c.id === selectedId) ?? null
@@ -84,7 +89,15 @@ export function CharactersPage() {
           description="인물 프로필과 서사 추적"
           actions={
             <>
-              {characters.length > 1 && (
+              <Segmented
+                value={view}
+                onChange={setView}
+                options={[
+                  { value: 'grid', label: '목록' },
+                  { value: 'map', label: '관계도' },
+                ]}
+              />
+              {view === 'grid' && characters.length > 1 && (
                 <Button size="sm" variant="ghost" onClick={sortByAppearance}>
                   등장순 정렬
                 </Button>
@@ -96,6 +109,11 @@ export function CharactersPage() {
           }
         />
 
+        {view === 'map' ? (
+          <div className="min-h-0 flex-1">
+            <RelationshipMap workspaceId={project.id} />
+          </div>
+        ) : (
         <div
           ref={sel.containerRef}
           onPointerDown={sel.onContainerPointerDown}
@@ -145,9 +163,10 @@ export function CharactersPage() {
             />
           )}
         </div>
+        )}
       </div>
 
-      {selected && (
+      {view === 'grid' && selected && (
         <CharacterDetailPanel
           character={selected}
           onChange={(patch) => update.mutate({ id: selected.id, patch })}
@@ -156,12 +175,14 @@ export function CharactersPage() {
         />
       )}
 
-      <BulkActionBar
-        count={sel.selected.size}
-        noun="인물"
-        onDelete={deleteBulk}
-        onClear={sel.clear}
-      />
+      {view === 'grid' && (
+        <BulkActionBar
+          count={sel.selected.size}
+          noun="인물"
+          onDelete={deleteBulk}
+          onClear={sel.clear}
+        />
+      )}
     </div>
   )
 }

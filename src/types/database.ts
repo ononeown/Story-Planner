@@ -79,6 +79,8 @@ export interface Character {
   lack: string | null
   desire: string | null
   signature_line: string | null
+  constant_traits: string | null
+  variable_traits: string | null
   portrait_url: string | null
   pos_x: number
   pos_y: number
