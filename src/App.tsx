@@ -2,7 +2,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { AuthProvider, useAuth } from '@/features/auth/AuthProvider'
 import { AuthPage } from '@/features/auth/AuthPage'
-import { ProjectProvider } from '@/features/projects/ProjectProvider'
+import { ProjectProvider, useProject } from '@/features/projects/ProjectProvider'
 import { FullScreenSpinner } from '@/components/ui/Spinner'
 import { isSupabaseConfigured } from '@/lib/supabase'
 import { SynopsisPage } from '@/features/synopsis/SynopsisPage'
@@ -10,6 +10,7 @@ import { ScrapBoardPage } from '@/features/scrap-board/ScrapBoardPage'
 import { WorldbuildingPage } from '@/features/worldbuilding/WorldbuildingPage'
 import { CharactersPage } from '@/features/characters/CharactersPage'
 import { TimelinePage } from '@/features/timeline/TimelinePage'
+import { PlotPage } from '@/features/plot/PlotPage'
 import { WorkspacePage } from '@/features/workspace/WorkspacePage'
 
 const router = createBrowserRouter([
@@ -23,10 +24,17 @@ const router = createBrowserRouter([
       { path: 'worldbuilding', element: <WorldbuildingPage /> },
       { path: 'characters', element: <CharactersPage /> },
       { path: 'timeline', element: <TimelinePage /> },
+      { path: 'plot', element: <PlotPage /> },
       { path: 'workspace', element: <WorkspacePage /> },
     ],
   },
 ])
+
+/** 작품이 바뀌면 라우터를 remount 해 페이지 로컬 상태를 초기화 */
+function AppRouter() {
+  const { project } = useProject()
+  return <RouterProvider key={project.id} router={router} />
+}
 
 /** 로그인 여부에 따라 앱 본체 또는 로그인 화면을 보여주는 게이트 */
 function AuthGate() {
@@ -37,7 +45,7 @@ function AuthGate() {
 
   return (
     <ProjectProvider>
-      <RouterProvider router={router} />
+      <AppRouter />
     </ProjectProvider>
   )
 }

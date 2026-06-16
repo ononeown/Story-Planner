@@ -10,7 +10,7 @@ export interface TabDef {
 export const TABS: TabDef[] = [
   {
     path: '/synopsis',
-    label: '마스터 시놉시스',
+    label: '시놉시스',
     short: '시놉시스',
     description: '작품 메타데이터 · 로그라인 · 5단 플롯',
   },
@@ -22,21 +22,27 @@ export const TABS: TabDef[] = [
   },
   {
     path: '/worldbuilding',
-    label: '세계관 위키',
+    label: '세계관',
     short: '세계관',
     description: '시공간 · 사회/인프라 · 정신/제약 설정 아카이브',
   },
   {
     path: '/characters',
-    label: '캐릭터 DB',
-    short: '캐릭터',
+    label: '인물',
+    short: '인물',
     description: '프로필 · 관계도 · 인물 변화표 · 등장표',
   },
   {
     path: '/timeline',
-    label: '타임라인 & 씬',
+    label: '타임라인',
     short: '타임라인',
     description: '진행률 · 회차/복선 · 인과관계 씬 디자이너',
+  },
+  {
+    path: '/plot',
+    label: '플롯',
+    short: '플롯',
+    description: '발단·전개·위기·절정·결말 5단 플롯 보드',
   },
   {
     path: '/workspace',

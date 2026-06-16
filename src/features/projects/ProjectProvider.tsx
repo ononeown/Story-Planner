@@ -12,22 +12,26 @@ import type { Workspace } from '@/types/database'
 
 /**
  * "작품(Project)" = DB 의 workspaces 행. 앱의 최상위 데이터 컨테이너.
- * (Tab6 "워크스페이스(집필)" 탭과는 다른 개념 — 혼동 방지 위해 코드명은 Project)
- *
- * 로그인 직후 사용자의 첫 작품을 로드하고, 없으면 기본 작품을 자동 생성한다.
+ * 사용자는 여러 작품을 두고 전환할 수 있다. (현재 작품 id 는 localStorage 에 보존)
  */
 interface ProjectValue {
+  projects: Workspace[]
   project: Workspace
-  refresh: () => Promise<void>
-  /** workspaces 행 일부를 갱신하고 로컬 상태도 즉시 반영 */
+  setProjectId: (id: string) => void
+  createProject: () => Promise<Workspace>
   updateProject: (patch: Partial<Workspace>) => Promise<void>
+  refresh: () => Promise<void>
 }
 
 const ProjectContext = createContext<ProjectValue | null>(null)
+const STORAGE_KEY = 'story-planner:current-project'
 
 export function ProjectProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
-  const [project, setProject] = useState<Workspace | null>(null)
+  const [projects, setProjects] = useState<Workspace[] | null>(null)
+  const [currentId, setCurrentId] = useState<string | null>(
+    () => localStorage.getItem(STORAGE_KEY),
+  )
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
@@ -38,43 +42,65 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
       .from('workspaces')
       .select('*')
       .order('created_at', { ascending: true })
-      .limit(1)
 
     if (error) {
       setError(error.message)
       return
     }
-    if (data && data.length > 0) {
-      setProject(data[0] as Workspace)
-      return
+
+    let list = (data ?? []) as Workspace[]
+
+    // 작품이 하나도 없으면 기본 작품 자동 생성
+    if (list.length === 0) {
+      const { data: created, error: createErr } = await supabase
+        .from('workspaces')
+        .insert({ user_id: user.id, title: '제목 없는 작품' })
+        .select()
+        .single()
+      if (createErr) {
+        setError(createErr.message)
+        return
+      }
+      list = [created as Workspace]
     }
 
-    // 첫 작품 자동 생성
-    const { data: created, error: createErr } = await supabase
-      .from('workspaces')
-      .insert({ user_id: user.id, title: '제목 없는 작품' })
-      .select()
-      .single()
-
-    if (createErr) setError(createErr.message)
-    else setProject(created as Workspace)
+    setProjects(list)
+    setCurrentId((prev) => (prev && list.some((p) => p.id === prev) ? prev : list[0].id))
   }, [user])
 
   useEffect(() => {
     load()
   }, [load])
 
+  const setProjectId = useCallback((id: string) => {
+    setCurrentId(id)
+    localStorage.setItem(STORAGE_KEY, id)
+  }, [])
+
+  const createProject = useCallback(async () => {
+    if (!user) throw new Error('로그인이 필요합니다.')
+    const { data, error } = await supabase
+      .from('workspaces')
+      .insert({ user_id: user.id, title: '제목 없는 작품' })
+      .select()
+      .single()
+    if (error) throw error
+    const created = data as Workspace
+    setProjects((prev) => [...(prev ?? []), created])
+    setProjectId(created.id)
+    return created
+  }, [user, setProjectId])
+
   const updateProject = useCallback(
     async (patch: Partial<Workspace>) => {
-      if (!project) return
-      setProject((prev) => (prev ? { ...prev, ...patch } : prev))
-      const { error } = await supabase
-        .from('workspaces')
-        .update(patch)
-        .eq('id', project.id)
+      if (!currentId) return
+      setProjects((prev) =>
+        prev?.map((p) => (p.id === currentId ? { ...p, ...patch } : p)) ?? prev,
+      )
+      const { error } = await supabase.from('workspaces').update(patch).eq('id', currentId)
       if (error) setError(error.message)
     },
-    [project],
+    [currentId],
   )
 
   if (error) {
@@ -90,7 +116,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
     )
   }
 
-  if (!project) {
+  const project = projects?.find((p) => p.id === currentId) ?? projects?.[0]
+
+  if (!projects || !project) {
     return (
       <div className="flex h-screen w-screen items-center justify-center bg-canvas">
         <p className="text-sm text-ink-muted">작품 불러오는 중…</p>
@@ -99,7 +127,9 @@ export function ProjectProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ProjectContext.Provider value={{ project, refresh: load, updateProject }}>
+    <ProjectContext.Provider
+      value={{ projects, project, setProjectId, createProject, updateProject, refresh: load }}
+    >
       {children}
     </ProjectContext.Provider>
   )

@@ -1,22 +1,21 @@
 import { NavLink } from 'react-router-dom'
 import { TABS } from '@/config/tabs'
 import { useAuth } from '@/features/auth/AuthProvider'
-import { useProject } from '@/features/projects/ProjectProvider'
+import { ProjectSwitcher } from '@/features/projects/ProjectSwitcher'
 
 /** 좌측 세로 탭 내비게이션 (라인 중심 미니멀 UI) */
 export function TabNav() {
-  const { project } = useProject()
   const { user, signOut } = useAuth()
 
   return (
     <nav className="flex w-60 shrink-0 flex-col border-r border-line bg-surface/70 backdrop-blur-xl">
       <div className="px-4 py-5">
-        <h1 className="text-sm font-semibold tracking-tight text-ink">
+        <h1 className="px-1 text-sm font-semibold tracking-tight text-ink">
           Story Planner
         </h1>
-        <p className="mt-1 truncate text-[13px] text-ink-muted" title={project.title}>
-          {project.title}
-        </p>
+        <div className="mt-1.5">
+          <ProjectSwitcher />
+        </div>
       </div>
 
       <ul className="flex-1 space-y-0.5 px-2">
