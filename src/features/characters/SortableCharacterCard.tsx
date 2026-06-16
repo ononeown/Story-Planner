@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from 'react'
+import type { KeyboardEvent, MouseEvent } from 'react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { Character } from '@/types/database'
@@ -8,11 +8,11 @@ import { cn } from '@/lib/cn'
 interface Props {
   character: Character
   selected: boolean
-  bulkSelected: boolean
+  multiSelected: boolean
   tier: Tier
   count: number
-  onSelect: () => void
-  onToggleBulk: () => void
+  onClick: (e: MouseEvent) => void
+  onActivate: () => void
 }
 
 const avatarByTier: Record<Tier, string> = {
@@ -32,11 +32,11 @@ const badgeByTier: Record<Tier, string> = {
 export function SortableCharacterCard({
   character: c,
   selected,
-  bulkSelected,
+  multiSelected,
   tier,
   count,
-  onSelect,
-  onToggleBulk,
+  onClick,
+  onActivate,
 }: Props) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: c.id,
@@ -51,7 +51,7 @@ export function SortableCharacterCard({
   function onKeyDown(e: KeyboardEvent) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
-      onSelect()
+      onActivate()
     }
   }
 
@@ -59,15 +59,16 @@ export function SortableCharacterCard({
     <div
       ref={setNodeRef}
       style={style}
+      data-select-id={c.id}
       {...attributes}
       {...listeners}
       role="button"
       tabIndex={0}
-      onClick={onSelect}
+      onClick={onClick}
       onKeyDown={onKeyDown}
       className={cn(
         'group relative flex touch-none cursor-pointer flex-col items-start gap-3 rounded-xl border bg-surface p-4 text-left transition-colors',
-        bulkSelected
+        multiSelected
           ? 'border-accent ring-1 ring-accent/40'
           : selected
             ? 'border-accent/60 ring-1 ring-accent/40'
@@ -76,27 +77,6 @@ export function SortableCharacterCard({
               : 'border-line hover:border-ink-faint/50 hover:bg-surface-2/50',
       )}
     >
-      {/* 다중 선택 체크박스 */}
-      <span
-        onPointerDown={(e) => e.stopPropagation()}
-        onClick={(e) => {
-          e.stopPropagation()
-          onToggleBulk()
-        }}
-        className={cn(
-          'absolute right-2.5 top-2.5 transition-opacity',
-          bulkSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
-        )}
-      >
-        <input
-          type="checkbox"
-          checked={bulkSelected}
-          readOnly
-          className="h-4 w-4 cursor-pointer accent-accent"
-          aria-label="선택"
-        />
-      </span>
-
       <span
         className={cn(
           'flex items-center justify-center rounded-full font-semibold',

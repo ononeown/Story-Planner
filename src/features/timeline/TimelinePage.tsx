@@ -25,6 +25,7 @@ import { EmptyState } from '@/components/ui/EmptyState'
 import { Segmented } from '@/components/ui/Segmented'
 import { BulkActionBar } from '@/components/ui/BulkActionBar'
 import { PlusIcon } from '@/components/ui/icons'
+import { useBoxSelection } from '@/lib/useBoxSelection'
 
 type View = 'design' | 'tracker'
 
@@ -37,34 +38,26 @@ export function TimelinePage() {
 
   const [view, setView] = useState<View>('design')
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [bulk, setBulk] = useState<Set<string>>(new Set())
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   )
 
   const episodeList = episodes.list.data ?? []
+  const sel = useBoxSelection(episodeList.map((e) => e.id))
+
   useEffect(() => {
     if (episodeList.length === 0) setSelectedId(null)
     else if (!episodeList.some((e) => e.id === selectedId)) setSelectedId(episodeList[0].id)
   }, [episodeList, selectedId])
 
-  function toggleBulk(id: string) {
-    setBulk((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
-
   function deleteBulk() {
-    const ids = [...bulk]
+    const ids = [...sel.selected]
     if (ids.length === 0) return
     if (!confirm(`선택한 회차 ${ids.length}개를 삭제할까요? 각 회차의 씬·복선도 함께 삭제되며 되돌릴 수 없습니다.`))
       return
     episodes.removeMany.mutate(ids)
-    setBulk(new Set())
+    sel.clear()
   }
 
   function handleEpisodeDragEnd(e: DragEndEvent) {
@@ -144,7 +137,11 @@ export function TimelinePage() {
               <PlusIcon />
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto px-2 pb-3">
+          <div
+            ref={sel.containerRef}
+            onPointerDown={sel.onContainerPointerDown}
+            className="relative flex-1 overflow-y-auto px-2 pb-3"
+          >
             {episodes.list.isLoading ? (
               <div className="flex justify-center py-8">
                 <Spinner />
@@ -169,17 +166,25 @@ export function TimelinePage() {
                         key={e.id}
                         episode={e}
                         selected={selectedId === e.id}
-                        bulkSelected={bulk.has(e.id)}
-                        onSelect={() => setSelectedId(e.id)}
-                        onToggleBulk={() => toggleBulk(e.id)}
+                        multiSelected={sel.isSelected(e.id)}
+                        onClick={(ev) => {
+                          if (!sel.handleClick(e.id, ev)) setSelectedId(e.id)
+                        }}
+                        onActivate={() => setSelectedId(e.id)}
                       />
                     ))}
                   </div>
                 </SortableContext>
               </DndContext>
             )}
+            {sel.marqueeRect && (
+              <div
+                className="pointer-events-none absolute z-10 rounded-sm border border-accent/60 bg-accent/10"
+                style={sel.marqueeRect}
+              />
+            )}
             <p className="px-2 pt-2 text-[11px] text-ink-faint">
-              드래그로 순서 변경 · 체크 후 일괄 삭제
+              드래그로 순서 변경 · 범위 드래그·Shift·Ctrl로 다중 선택
             </p>
           </div>
         </div>
@@ -282,10 +287,10 @@ export function TimelinePage() {
       </div>
 
       <BulkActionBar
-        count={bulk.size}
+        count={sel.selected.size}
         noun="회차"
         onDelete={deleteBulk}
-        onClear={() => setBulk(new Set())}
+        onClear={sel.clear}
       />
     </div>
   )
