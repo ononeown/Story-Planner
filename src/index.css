@@ -1,42 +1,39 @@
 @import 'tailwindcss';
 
-/* 다크 모드: class 전략 (html.dark) */
-@variant dark (&:where(.dark, .dark *));
-
 /* =========================================================
-   디자인 토큰 — Apple HIG(다크) 참고
-   - 중성(neutral) 다크 배경 + 단계적 elevation
-   - 시스템 블루 액센트, 헤어라인 구분선, off-white 라벨
-   - 포스트잇은 기획서 §3 파스텔(Muted) 유지
+   디자인 토큰 — Apple HIG(라이트) 참고
+   - Scrivener/메모장처럼 밝은 집필 화면 (white 콘텐츠 + 연한 회색 패널)
+   - 시스템 블루 액센트, 헤어라인 구분선, near-black 라벨
+   - 포스트잇은 기획서 §3 파스텔
    ========================================================= */
 @theme {
   --font-sans: 'Pretendard Variable', Pretendard, system-ui, -apple-system,
     'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 
-  /* 배경 elevation 단계 */
-  --color-canvas: #1c1c1e;      /* 앱 베이스 (system background) */
-  --color-surface: #2c2c2e;     /* 패널/카드 (secondary) */
-  --color-surface-2: #3a3a3c;   /* 보조 면 (tertiary) */
-  --color-elevated: #38383a;    /* 호버/선택 강조 */
+  /* 배경 — 밝은 화면 */
+  --color-canvas: #ffffff;      /* 콘텐츠/집필 영역 (순백) */
+  --color-surface: #f5f5f7;     /* 패널/카드/사이드바 (연회색) */
+  --color-surface-2: #e8e8ed;   /* 호버 / 보조 버튼 / 아바타 */
+  --color-elevated: #dedee3;    /* 선택/강조 */
 
   /* 텍스트 */
-  --color-ink: #f5f5f7;         /* primary label (off-white) */
-  --color-ink-muted: #98989f;   /* secondary label */
-  --color-ink-faint: #636366;   /* tertiary label */
+  --color-ink: #1d1d1f;         /* primary label (near-black) */
+  --color-ink-muted: #6e6e73;   /* secondary label */
+  --color-ink-faint: #8e8e93;   /* tertiary / placeholder */
 
   /* 라인 / 액센트 */
-  --color-line: rgba(255, 255, 255, 0.1);   /* 헤어라인 separator */
-  --color-accent: #0a84ff;      /* system blue (dark) */
-  --color-accent-hover: #409cff;
-  --color-danger: #ff453a;      /* system red (dark) */
-  --color-success: #30d158;     /* system green (dark) */
+  --color-line: rgba(0, 0, 0, 0.1);   /* 헤어라인 separator */
+  --color-accent: #007aff;      /* system blue (light) */
+  --color-accent-hover: #0066d6;
+  --color-danger: #ff3b30;      /* system red */
+  --color-success: #34c759;     /* system green */
 
-  /* 포스트잇 파스텔 컬러칩 */
-  --color-sticky-yellow: #d9cb8f;
-  --color-sticky-pink: #d8a7b1;
-  --color-sticky-green: #a7c4a0;
-  --color-sticky-blue: #9db4d8;
-  --color-sticky-gray: #b8bec9;
+  /* 포스트잇 파스텔 컬러칩 (밝은 화면용) */
+  --color-sticky-yellow: #fff2b2;
+  --color-sticky-pink: #ffd4e0;
+  --color-sticky-green: #cdeccd;
+  --color-sticky-blue: #d3e4ff;
+  --color-sticky-gray: #e6e8ec;
 
   /* 라운드 (Apple 카드 느낌) */
   --radius-lg: 0.625rem;  /* 10px */
@@ -73,7 +70,6 @@ body {
   background: var(--color-ink-faint);
 }
 
-/* 포커스 링: 시스템 블루 (접근성) */
 :focus-visible {
   outline: none;
 }
