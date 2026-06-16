@@ -1,0 +1,39 @@
+@import 'tailwindcss';
+
+/* 다크 모드: class 전략 (html.dark) */
+@variant dark (&:where(.dark, .dark *));
+
+/* =========================================================
+   디자인 토큰 (기획서 §3 색상 전략)
+   - 배경: Slate Gray 계열 / 텍스트: Off-White
+   - 포스트잇: 파스텔(Muted) 노랑·분홍·초록·파랑
+   ========================================================= */
+@theme {
+  --color-canvas: #0f172a;      /* slate-900 : 앱 배경 */
+  --color-surface: #1e293b;     /* slate-800 : 패널/카드 면 */
+  --color-surface-2: #334155;   /* slate-700 : 보조 면 */
+  --color-line: #334155;        /* 라인 중심 UI 구분선 */
+  --color-ink: #e2e8f0;         /* off-white 본문 텍스트 */
+  --color-ink-muted: #94a3b8;   /* 보조 텍스트 */
+  --color-accent: #818cf8;      /* indigo-400 : 포인트 */
+
+  /* 포스트잇 파스텔 컬러칩 */
+  --color-sticky-yellow: #d9cb8f;
+  --color-sticky-pink: #d8a7b1;
+  --color-sticky-green: #a7c4a0;
+  --color-sticky-blue: #9db4d8;
+  --color-sticky-gray: #b8bec9;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: system-ui, -apple-system, 'Segoe UI', 'Apple SD Gothic Neo',
+    'Noto Sans KR', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
