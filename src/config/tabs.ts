@@ -39,6 +39,12 @@ export const TABS: TabDef[] = [
     description: '진행률 · 회차/복선 · 인과관계 씬 디자이너',
   },
   {
+    path: '/digest',
+    label: '회차정리',
+    short: '회차정리',
+    description: '회차별 핵심 전개 스크롤 타임라인',
+  },
+  {
     path: '/workspace',
     label: '워크스페이스',
     short: '집필',
