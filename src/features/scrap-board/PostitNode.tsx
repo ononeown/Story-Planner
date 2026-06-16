@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { NodeProps } from '@xyflow/react'
 import type { ScrapCard, StickyColor } from '@/types/database'
 import { useDebouncedCallback } from '@/lib/useDebouncedCallback'
@@ -32,11 +32,20 @@ export function PostitNode({ data }: NodeProps) {
   const { card, dimmed, onChange, onDelete } = data as PostitData
   const [title, setTitle] = useState(card.title ?? '')
   const [body, setBody] = useState(card.body ?? '')
+  const bodyRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     setTitle(card.title ?? '')
     setBody(card.body ?? '')
   }, [card.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 내용 양에 맞춰 textarea 높이 자동 확장 (내부 스크롤 없이)
+  useEffect(() => {
+    const el = bodyRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [body])
 
   const save = useDebouncedCallback((patch: Partial<ScrapCard>) => onChange(patch))
 
@@ -135,13 +144,14 @@ export function PostitNode({ data }: NodeProps) {
               placeholder="제목"
             />
             <textarea
+              ref={bodyRef}
               value={body}
               onChange={(e) => {
                 setBody(e.target.value)
                 save({ body: e.target.value })
               }}
-              rows={4}
-              className="nodrag nowheel w-full resize-none bg-transparent text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink/40"
+              rows={2}
+              className="nodrag w-full resize-none overflow-hidden bg-transparent text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink/40"
               placeholder="메모를 입력하세요"
             />
           </div>
