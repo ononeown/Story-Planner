@@ -51,13 +51,13 @@ export function PostitNode({ data }: NodeProps) {
     })
   }
 
-  // 내용 양에 맞춰 textarea 높이 자동 확장 (내부 스크롤 없이)
+  // 내용 양에 맞춰 textarea 높이 자동 확장 (내부 스크롤 없이). 펼칠 때도 재계산.
   useEffect(() => {
     const el = bodyRef.current
     if (!el) return
     el.style.height = 'auto'
     el.style.height = `${el.scrollHeight}px`
-  }, [body])
+  }, [body, collapsed])
 
   const save = useDebouncedCallback((patch: Partial<ScrapCard>) => onChange(patch))
   // Ctrl/Shift 누르면 카드 내용은 클릭을 무시 → 선택/이동으로 인식

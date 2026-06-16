@@ -30,13 +30,13 @@ export function FragmentCard({ fragment, onChange, onDelete }: Props) {
     })
   }
 
-  // 내용 양에 맞춰 높이 자동 확장
+  // 내용 양에 맞춰 높이 자동 확장. 펼칠 때도 재계산.
   useEffect(() => {
     const el = contentRef.current
     if (!el) return
     el.style.height = 'auto'
     el.style.height = `${el.scrollHeight}px`
-  }, [content])
+  }, [content, collapsed])
 
   const save = useDebouncedCallback((patch: Partial<Fragment>) => onChange(patch))
 
