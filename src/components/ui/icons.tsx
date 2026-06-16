@@ -43,3 +43,19 @@ export function ChevronIcon(props: SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+
+export function PinIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 17v5M9 10.76V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v5.76a2 2 0 0 0 .6 1.43l1.4 1.37a1 1 0 0 1-.7 1.72H6.7a1 1 0 0 1-.7-1.72l1.4-1.37a2 2 0 0 0 .6-1.43Z" />
+    </svg>
+  )
+}
+
+export function DownloadIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 3v12m0 0 4-4m-4 4-4-4M5 21h14" />
+    </svg>
+  )
+}
