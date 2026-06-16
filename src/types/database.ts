@@ -81,6 +81,7 @@ export interface Character {
   portrait_url: string | null
   pos_x: number
   pos_y: number
+  sort_order: number
   created_at: string
 }
 

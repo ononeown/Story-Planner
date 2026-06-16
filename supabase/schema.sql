@@ -130,6 +130,7 @@ create table if not exists public.characters (
   portrait_url   text,
   pos_x          numeric not null default 0,
   pos_y          numeric not null default 0,
+  sort_order     int not null default 0,
   created_at     timestamptz not null default now()
 );
 create index if not exists idx_characters_ws on public.characters(workspace_id);

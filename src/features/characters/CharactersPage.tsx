@@ -1,21 +1,39 @@
 import { useState } from 'react'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import { SortableContext, arrayMove, rectSortingStrategy } from '@dnd-kit/sortable'
 import { useProject } from '@/features/projects/ProjectProvider'
 import { useCharacters } from './useCharacters'
+import { useCharacterAppearances, tierOf } from './useCharacterAppearances'
+import { SortableCharacterCard } from './SortableCharacterCard'
 import { CharacterDetailPanel } from './CharacterDetailPanel'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { PlusIcon } from '@/components/ui/icons'
-import { cn } from '@/lib/cn'
 
 export function CharactersPage() {
   const { project } = useProject()
-  const { list, create, update, remove } = useCharacters(project.id)
+  const { list, create, update, remove, reorder } = useCharacters(project.id)
+  const appearances = useCharacterAppearances(project.id)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const characters = list.data ?? []
   const selected = characters.find((c) => c.id === selectedId) ?? null
+
+  const counts = appearances.data ?? {}
+  const maxCount = Math.max(0, ...Object.values(counts))
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+  )
 
   async function handleCreate() {
     const created = await create.mutateAsync()
@@ -29,16 +47,40 @@ export function CharactersPage() {
     setSelectedId(null)
   }
 
+  function handleDragEnd(e: DragEndEvent) {
+    const { active, over } = e
+    if (!over || active.id === over.id) return
+    const ids = characters.map((c) => c.id)
+    const from = ids.indexOf(String(active.id))
+    const to = ids.indexOf(String(over.id))
+    if (from < 0 || to < 0) return
+    reorder.mutate(arrayMove(ids, from, to))
+  }
+
+  function sortByAppearance() {
+    const ordered = [...characters]
+      .sort((a, b) => (counts[b.id] ?? 0) - (counts[a.id] ?? 0) || a.sort_order - b.sort_order)
+      .map((c) => c.id)
+    reorder.mutate(ordered)
+  }
+
   return (
     <div className="flex h-full">
       <div className="flex h-full flex-1 flex-col">
         <PageHeader
           title="캐릭터 데이터베이스"
-          description="인물 프로필 설정 및 서사 추적"
+          description="드래그로 순서 변경 · 등장 횟수로 위계 표시"
           actions={
-            <Button size="sm" onClick={handleCreate} disabled={create.isPending}>
-              <PlusIcon /> 새 인물
-            </Button>
+            <>
+              {characters.length > 1 && (
+                <Button size="sm" variant="ghost" onClick={sortByAppearance}>
+                  등장순 정렬
+                </Button>
+              )}
+              <Button size="sm" onClick={handleCreate} disabled={create.isPending}>
+                <PlusIcon /> 새 인물
+              </Button>
+            </>
           }
         />
 
@@ -58,32 +100,22 @@ export function CharactersPage() {
               }
             />
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {characters.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedId(c.id)}
-                  className={cn(
-                    'flex flex-col items-start gap-3 rounded-xl border bg-surface p-4 text-left transition-colors',
-                    selectedId === c.id
-                      ? 'border-accent/60 ring-1 ring-accent/40'
-                      : 'border-line hover:border-ink-faint/50 hover:bg-surface-2/50',
-                  )}
-                >
-                  <span className="flex h-11 w-11 items-center justify-center rounded-full bg-surface-2 text-base font-semibold text-ink">
-                    {(c.name || '?').trim().charAt(0) || '?'}
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-ink">
-                      {c.name || '이름 없는 인물'}
-                    </p>
-                    <p className="truncate text-xs text-ink-muted">
-                      {[c.age, c.gender].filter(Boolean).join(' · ') || '설정 미입력'}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={characters.map((c) => c.id)} strategy={rectSortingStrategy}>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  {characters.map((c) => (
+                    <SortableCharacterCard
+                      key={c.id}
+                      character={c}
+                      selected={selectedId === c.id}
+                      tier={tierOf(counts[c.id] ?? 0, maxCount)}
+                      count={counts[c.id] ?? 0}
+                      onSelect={() => setSelectedId(c.id)}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           )}
         </div>
       </div>
