@@ -8,8 +8,11 @@ import {
   Handle,
   Position,
   MarkerType,
+  ConnectionMode,
   useNodesState,
+  useInternalNode,
   type Node,
+  type InternalNode,
   type NodeChange,
   type NodeProps,
   type Edge,
@@ -42,7 +45,20 @@ function CharacterNode({ data, selected }: NodeProps) {
   )
 }
 
-/* ── 인라인 편집 관계 엣지 (양방향 분리 곡선) ─────────────── */
+/* ── 플로팅 엣지: 노드 테두리에서 서로 마주보는 가장 가까운 지점 연결 ── */
+function nodeIntersection(a: InternalNode, b: InternalNode) {
+  const aw = (a.measured.width ?? 0) / 2
+  const ah = (a.measured.height ?? 0) / 2
+  const ax = a.internals.positionAbsolute.x + aw
+  const ay = a.internals.positionAbsolute.y + ah
+  const bx = b.internals.positionAbsolute.x + (b.measured.width ?? 0) / 2
+  const by = b.internals.positionAbsolute.y + (b.measured.height ?? 0) / 2
+  const xx = (bx - ax) / (2 * aw || 1) - (by - ay) / (2 * ah || 1)
+  const yy = (bx - ax) / (2 * aw || 1) + (by - ay) / (2 * ah || 1)
+  const m = 1 / (Math.abs(xx) + Math.abs(yy) || 1)
+  return { x: aw * (m * xx + m * yy) + ax, y: ah * (-m * xx + m * yy) + ay }
+}
+
 interface RelData {
   label: string
   dir: number // -1 | 0 | 1 (양방향이면 좌우로 분리)
@@ -51,23 +67,31 @@ interface RelData {
   [k: string]: unknown
 }
 
-function RelationEdge({
-  id, sourceX, sourceY, targetX, targetY, markerEnd, data, selected,
-}: EdgeProps) {
+function RelationEdge({ id, source, target, markerEnd, data, selected }: EdgeProps) {
   const d = data as RelData
+  const sourceNode = useInternalNode(source)
+  const targetNode = useInternalNode(target)
   const [val, setVal] = useState(d.label ?? '')
   useEffect(() => setVal(d.label ?? ''), [d.label])
   const save = useDebouncedCallback((v: string) => d.onChange(v), 500)
+
+  if (!sourceNode || !targetNode) return null
+  const s = nodeIntersection(sourceNode, targetNode)
+  const t = nodeIntersection(targetNode, sourceNode)
+  const sourceX = s.x, sourceY = s.y, targetX = t.x, targetY = t.y
 
   const mx = (sourceX + targetX) / 2
   const my = (sourceY + targetY) / 2
   const dx = targetX - sourceX
   const dy = targetY - sourceY
   const len = Math.hypot(dx, dy) || 1
-  const off = 46 * (d.dir ?? 0)
+  const off = 38 * (d.dir ?? 0)
   const cx = mx + (-dy / len) * off
   const cy = my + (dx / len) * off
-  const path = `M ${sourceX},${sourceY} Q ${cx},${cy} ${targetX},${targetY}`
+  const path =
+    (d.dir ?? 0) === 0
+      ? `M ${sourceX},${sourceY} L ${targetX},${targetY}`
+      : `M ${sourceX},${sourceY} Q ${cx},${cy} ${targetX},${targetY}`
 
   return (
     <>
@@ -170,6 +194,7 @@ export function RelationshipMap({ workspaceId }: { workspaceId: string }) {
         edges={edges}
         onNodesChange={handleNodesChange}
         onConnect={onConnect}
+        connectionMode={ConnectionMode.Loose}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         proOptions={{ hideAttribution: true }}
