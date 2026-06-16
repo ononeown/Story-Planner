@@ -125,7 +125,7 @@ export function ScrapBoardPage() {
           <Input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="검색 (비매칭 흐리게)"
+            placeholder="검색"
             className="h-9 w-56"
           />
         }
@@ -141,7 +141,7 @@ export function ScrapBoardPage() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && scrapeUrl()}
-            placeholder="URL 붙여넣고 Enter → 링크 스크랩 (OG 자동)"
+            placeholder="URL 붙여넣고 Enter"
             className="h-9 max-w-md"
           />
           <Button size="sm" variant="secondary" onClick={scrapeUrl} disabled={scraping || !url.trim()}>

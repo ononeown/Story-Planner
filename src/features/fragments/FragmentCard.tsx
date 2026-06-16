@@ -47,7 +47,7 @@ export function FragmentCard({ fragment, onChange, onDelete }: Props) {
           setTitle(e.target.value)
           save({ title: e.target.value })
         }}
-        placeholder="장면 제목 (선택)"
+        placeholder=""
         className="mb-1 w-full bg-transparent text-sm font-semibold text-ink outline-none placeholder:text-ink/40"
       />
       <textarea
@@ -58,7 +58,7 @@ export function FragmentCard({ fragment, onChange, onDelete }: Props) {
           save({ content: e.target.value })
         }}
         rows={3}
-        placeholder="보고 싶은 장면을 썰처럼 자유롭게…"
+        placeholder=""
         className="w-full resize-none overflow-hidden bg-transparent text-[13px] leading-relaxed text-ink outline-none placeholder:text-ink/40"
       />
 

@@ -27,7 +27,7 @@ export function ProjectSwitcher() {
     setMenu(null)
     const ok = window.confirm(
       `'${target.title || '제목 없는 작품'}' 작품을 삭제할까요?\n\n` +
-        '이 작품의 모든 데이터(시놉시스·인물·세계관·회차·씬 등)가 영구히 삭제되며 되돌릴 수 없습니다.',
+        '이 작품의 모든 데이터(시놉시스·인물·세계관·회차·사건 등)가 영구히 삭제되며 되돌릴 수 없습니다.',
     )
     if (!ok) return
     await deleteProject(target.id)

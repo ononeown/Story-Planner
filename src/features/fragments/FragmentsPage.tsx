@@ -17,7 +17,6 @@ export function FragmentsPage() {
     <div className="flex h-full flex-col">
       <PageHeader
         title="장면 조각"
-        description="보고 싶은 장면을 조각글로 — 사건의 씨앗"
         actions={
           <Button size="sm" onClick={() => create.mutate('yellow')} disabled={create.isPending}>
             <PlusIcon /> 조각 추가

@@ -2,14 +2,14 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 
 /**
- * 인물별 등장 횟수 = 해당 인물이 연결된 씬(scene_characters) 수.
+ * 인물별 등장 횟수 = 해당 인물이 연결된 사건(scene_characters) 수.
  * 위계(주연/조연/단역) 산정에 사용.
  */
 export function useCharacterAppearances(workspaceId: string) {
   return useQuery({
     queryKey: ['character-appearances', workspaceId],
     queryFn: async (): Promise<Record<string, number>> => {
-      // 이 작품의 씬 id 목록
+      // 이 작품의 사건 id 목록
       const { data: scenes, error: sErr } = await supabase
         .from('scenes')
         .select('id')

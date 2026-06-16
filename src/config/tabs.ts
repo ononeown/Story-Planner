@@ -42,7 +42,7 @@ export const TABS: TabDef[] = [
     path: '/timeline',
     label: '사건 개요',
     short: '사건 개요',
-    description: '진행률 · 회차/복선 · 인과관계 씬 디자이너',
+    description: '진행률 · 회차/복선 · 인과관계 사건 설계',
   },
   {
     path: '/fragments',

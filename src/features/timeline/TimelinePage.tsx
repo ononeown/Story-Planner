@@ -49,7 +49,7 @@ export function TimelinePage() {
   function deleteBulk() {
     const ids = [...sel.selected]
     if (ids.length === 0) return
-    if (!confirm(`선택한 회차 ${ids.length}개를 삭제할까요? 각 회차의 씬·복선도 함께 삭제되며 되돌릴 수 없습니다.`))
+    if (!confirm(`선택한 회차 ${ids.length}개를 삭제할까요? 각 회차의 사건·복선도 함께 삭제되며 되돌릴 수 없습니다.`))
       return
     episodes.removeMany.mutate(ids)
     sel.clear()
@@ -144,12 +144,12 @@ export function TimelinePage() {
           </div>
         </div>
 
-        {/* 우측: 선택 회차 + 씬 + 복선 */}
+        {/* 우측: 선택 회차 + 사건 + 복선 */}
         <div className="min-w-0 flex-1 overflow-y-auto px-8 py-8">
           {!selected ? (
             <EmptyState
               title="회차를 선택하거나 추가하세요"
-              hint="좌측에서 회차를 만들면 해당 회차의 사건(씬)을 설계할 수 있습니다."
+              hint="좌측에서 회차를 만들면 해당 회차의 사건을 설계할 수 있습니다."
               action={
                 <Button size="sm" onClick={addEpisode}>
                   <PlusIcon /> 새 회차
@@ -163,10 +163,10 @@ export function TimelinePage() {
                 onChange={(patch) => episodes.update.mutate({ id: selected.id, patch })}
               />
 
-              {/* 씬 디자이너 */}
+              {/* 사건 설계 */}
               <section>
                 <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-[13px] font-semibold text-ink">사건(씬) 설계</h3>
+                  <h3 className="text-[13px] font-semibold text-ink">사건 설계</h3>
                   <Button size="sm" variant="secondary" onClick={() => scenes.create.mutate(selected.id)}>
                     <PlusIcon /> 새 사건
                   </Button>

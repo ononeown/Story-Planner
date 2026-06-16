@@ -125,7 +125,7 @@ function buildEpisode(
   md += section('아이디어 메모', e.idea_memo)
 
   if (scenes.length > 0) {
-    md += `## 사건(씬)${nl}${nl}`
+    md += `## 사건${nl}${nl}`
     for (const s of scenes) {
       md += `### ${s.title || '제목 없는 사건'}${nl}${nl}`
       md += field('상세', s.detail)

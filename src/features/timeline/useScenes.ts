@@ -10,7 +10,7 @@ export interface ScenesData {
   linkMap: Record<string, string[]>
 }
 
-/** 씬(사건) 디자이너 — 씬 CRUD + 관련 인물(scene_characters) + 인과 링크(scene_links) */
+/** 사건 디자이너 — 사건(scenes) CRUD + 관련 인물(scene_characters) + 인과 링크(scene_links) */
 export function useScenes(workspaceId: string) {
   const qc = useQueryClient()
   const key = ['scenes', workspaceId]

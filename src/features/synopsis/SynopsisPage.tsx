@@ -24,7 +24,7 @@ const SYN_KEYS: SynKey[] = [
 
 const EMPTY = Object.fromEntries(SYN_KEYS.map((k) => [k, ''])) as SynForm
 
-// 5단 플롯 카드 (발단 → 전개 → 위기 → 절정 → 결말) — 큰 골격만; 세부 장면은 타임라인/씬에서 설계
+// 5단 플롯 카드 (발단 → 전개 → 위기 → 절정 → 결말) — 큰 골격
 const PLOT_STAGES: { key: SynKey; label: string; hint: string }[] = [
   { key: 'plot_intro', label: '발단', hint: '인물·배경 소개' },
   { key: 'plot_rising', label: '전개', hint: '갈등의 점화' },
@@ -149,12 +149,7 @@ export function SynopsisPage() {
 
           {/* 5단 플롯 (골격) */}
           <section>
-            <div className="mb-3 flex items-baseline justify-between">
-              <h3 className="text-[13px] font-medium text-ink-muted">5단 플롯 구조</h3>
-              <span className="text-xs text-ink-faint">
-                세부 장면은 타임라인·씬에서 설계
-              </span>
-            </div>
+            <h3 className="mb-3 text-[13px] font-medium text-ink-muted">5단 플롯 구조</h3>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-5">
               {PLOT_STAGES.map((stage, i) => (
                 <Card key={stage.key} className="flex flex-col p-4">
