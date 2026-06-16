@@ -1,23 +1,37 @@
 import { useEffect, useState } from 'react'
 import type { JSONContent } from '@tiptap/react'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import { SortableContext, arrayMove, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useProject } from '@/features/projects/ProjectProvider'
 import { useEpisodes } from '@/features/timeline/useEpisodes'
+import { SortableEpisodeItem } from '@/features/timeline/SortableEpisodeItem'
 import { WorkspaceEditor } from './WorkspaceEditor'
 import { ReferenceSidebar } from './ReferenceSidebar'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { BulkActionBar } from '@/components/ui/BulkActionBar'
 import { PlusIcon } from '@/components/ui/icons'
-import { cn } from '@/lib/cn'
+import { useBoxSelection } from '@/lib/useBoxSelection'
 
 export function WorkspacePage() {
   const { project } = useProject()
-  const { list, create, update } = useEpisodes(project.id)
+  const { list, create, update, reorder, removeMany } = useEpisodes(project.id)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [panelOpen, setPanelOpen] = useState(true)
 
   const episodes = list.data ?? []
+  const sel = useBoxSelection(episodes.map((e) => e.id))
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+
   useEffect(() => {
     if (episodes.length === 0) setSelectedId(null)
     else if (!episodes.some((e) => e.id === selectedId)) setSelectedId(episodes[0].id)
@@ -28,6 +42,25 @@ export function WorkspacePage() {
   async function addEpisode() {
     const created = await create.mutateAsync()
     setSelectedId(created.id)
+  }
+
+  function handleDragEnd(e: DragEndEvent) {
+    const { active, over } = e
+    if (!over || active.id === over.id) return
+    const ids = episodes.map((ep) => ep.id)
+    const from = ids.indexOf(String(active.id))
+    const to = ids.indexOf(String(over.id))
+    if (from < 0 || to < 0) return
+    reorder.mutate(arrayMove(ids, from, to))
+  }
+
+  function deleteBulk() {
+    const ids = [...sel.selected]
+    if (ids.length === 0) return
+    if (!confirm(`선택한 회차 ${ids.length}개를 삭제할까요? 본문·사건·복선도 함께 삭제되며 되돌릴 수 없습니다.`))
+      return
+    removeMany.mutate(ids)
+    sel.clear()
   }
 
   return (
@@ -44,34 +77,42 @@ export function WorkspacePage() {
             <PlusIcon />
           </button>
         </div>
-        <div className="flex-1 overflow-y-auto px-2 pb-3">
+        <div
+          ref={sel.containerRef}
+          onPointerDown={sel.onContainerPointerDown}
+          className="relative flex-1 overflow-y-auto px-2 pb-3"
+        >
           {list.isLoading ? (
             <div className="flex justify-center py-8">
               <Spinner />
             </div>
+          ) : episodes.length === 0 ? (
+            <p className="px-2 py-4 text-xs text-ink-faint">아직 회차가 없습니다. 위 + 로 추가하세요.</p>
           ) : (
-            <ul className="space-y-0.5">
-              {episodes.map((e) => (
-                <li key={e.id}>
-                  <button
-                    onClick={() => setSelectedId(e.id)}
-                    className={cn(
-                      'flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left transition-colors',
-                      selectedId === e.id
-                        ? 'bg-surface-2 text-ink'
-                        : 'text-ink-muted hover:bg-surface-2/60 hover:text-ink',
-                    )}
-                  >
-                    <span className="shrink-0 text-[11px] tabular-nums text-ink-faint">
-                      {e.episode_no}
-                    </span>
-                    <span className="flex-1 truncate text-[13px]">
-                      {e.title || '제목 없음'}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+              <SortableContext items={episodes.map((e) => e.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-0.5">
+                  {episodes.map((e) => (
+                    <SortableEpisodeItem
+                      key={e.id}
+                      episode={e}
+                      selected={selectedId === e.id}
+                      multiSelected={sel.isSelected(e.id)}
+                      onClick={(ev) => {
+                        if (!sel.handleClick(e.id, ev)) setSelectedId(e.id)
+                      }}
+                      onActivate={() => setSelectedId(e.id)}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
+          )}
+          {sel.marqueeRect && (
+            <div
+              className="pointer-events-none absolute z-10 rounded-sm border border-accent/60 bg-accent/10"
+              style={sel.marqueeRect}
+            />
           )}
         </div>
       </div>
@@ -127,6 +168,8 @@ export function WorkspacePage() {
 
       {/* 우: 참고 사이드바 */}
       {panelOpen && <ReferenceSidebar onClose={() => setPanelOpen(false)} />}
+
+      <BulkActionBar count={sel.selected.size} noun="회차" onDelete={deleteBulk} onClear={sel.clear} />
     </div>
   )
 }

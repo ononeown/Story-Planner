@@ -163,6 +163,7 @@ export function ScrapBoardPage() {
             onNodeContextMenu={onNodeContextMenu}
             onNodesDelete={onNodesDelete}
             deleteKeyCode={['Delete']}
+            multiSelectionKeyCode={['Control', 'Meta', 'Shift']}
             nodeTypes={nodeTypes}
             proOptions={{ hideAttribution: true }}
             minZoom={0.2}

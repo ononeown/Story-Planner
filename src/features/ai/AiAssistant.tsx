@@ -40,6 +40,16 @@ export function AiAssistant() {
     return () => document.removeEventListener('contextmenu', onContextMenu)
   }, [])
 
+  // 외부(예: 장면 조각 카드)에서 명시적 텍스트로 메뉴 열기
+  useEffect(() => {
+    function onCustom(e: Event) {
+      const d = (e as CustomEvent).detail as { text: string; x: number; y: number }
+      if (d?.text?.trim()) setMenu({ x: d.x, y: d.y, selection: d.text })
+    }
+    window.addEventListener('storyplanner:ai-context', onCustom as EventListener)
+    return () => window.removeEventListener('storyplanner:ai-context', onCustom as EventListener)
+  }, [])
+
   const getContext = useCallback(async (): Promise<string> => {
     if (ctxCache.current[project.id]) return ctxCache.current[project.id]
     const [syn, chars, eps] = await Promise.all([

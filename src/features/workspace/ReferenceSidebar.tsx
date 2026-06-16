@@ -80,37 +80,53 @@ export function ReferenceSidebar({ onClose }: Props) {
           <p className="px-1 py-2 text-xs text-ink-faint">스크랩이 없습니다.</p>
         ) : (
           <ul className="space-y-1.5">
-            {(scraps.list.data ?? []).map((s) => (
-              <li
-                key={s.id}
-                className={cn(
-                  'rounded-lg border border-line p-3',
-                  s.color === 'yellow' && 'bg-sticky-yellow',
-                  s.color === 'pink' && 'bg-sticky-pink',
-                  s.color === 'green' && 'bg-sticky-green',
-                  s.color === 'blue' && 'bg-sticky-blue',
-                  s.color === 'gray' && 'bg-sticky-gray',
-                )}
-              >
-                <p className="truncate text-[13px] font-medium text-ink">
-                  {s.title || (s.kind === 'memo' ? '메모' : '링크')}
-                </p>
-                {s.description && (
-                  <p className="mt-0.5 line-clamp-3 text-xs text-ink/70">{s.description}</p>
-                )}
-                {s.body && <p className="mt-0.5 line-clamp-4 text-xs text-ink/70">{s.body}</p>}
-                {s.url && (
-                  <a
-                    href={s.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-1 block truncate text-[11px] text-accent hover:underline"
-                  >
-                    {s.url}
-                  </a>
-                )}
-              </li>
-            ))}
+            {(scraps.list.data ?? []).map((s) => {
+              const isOpen = open === s.id
+              return (
+                <li
+                  key={s.id}
+                  className={cn(
+                    'rounded-lg border border-line p-3',
+                    s.color === 'yellow' && 'bg-sticky-yellow',
+                    s.color === 'pink' && 'bg-sticky-pink',
+                    s.color === 'green' && 'bg-sticky-green',
+                    s.color === 'blue' && 'bg-sticky-blue',
+                    s.color === 'gray' && 'bg-sticky-gray',
+                  )}
+                >
+                  <button onClick={() => toggle(s.id)} className="block w-full text-left">
+                    <p className={cn('text-[13px] font-medium text-ink', !isOpen && 'truncate')}>
+                      {s.title || (s.kind === 'memo' ? '메모' : '링크')}
+                    </p>
+                    {s.description && (
+                      <p className={cn('mt-0.5 text-xs text-ink/70', !isOpen && 'line-clamp-2')}>
+                        {s.description}
+                      </p>
+                    )}
+                    {s.body && (
+                      <p
+                        className={cn(
+                          'mt-0.5 whitespace-pre-wrap text-xs text-ink/70',
+                          !isOpen && 'line-clamp-2',
+                        )}
+                      >
+                        {s.body}
+                      </p>
+                    )}
+                  </button>
+                  {isOpen && s.url && (
+                    <a
+                      href={s.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 block break-all text-[11px] text-accent hover:underline"
+                    >
+                      {s.url}
+                    </a>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         )}
       </div>

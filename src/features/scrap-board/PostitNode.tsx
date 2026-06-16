@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { NodeProps } from '@xyflow/react'
 import type { ScrapCard, StickyColor } from '@/types/database'
 import { useDebouncedCallback } from '@/lib/useDebouncedCallback'
+import { useModifierHeld } from '@/lib/useModifierHeld'
 import { PinIcon, TrashIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
 
@@ -48,6 +49,8 @@ export function PostitNode({ data }: NodeProps) {
   }, [body])
 
   const save = useDebouncedCallback((patch: Partial<ScrapCard>) => onChange(patch))
+  // Ctrl/Shift 누르면 카드 내용은 클릭을 무시 → 선택/이동으로 인식
+  const moveMode = useModifierHeld()
 
   return (
     <div
@@ -98,7 +101,7 @@ export function PostitNode({ data }: NodeProps) {
       </div>
 
       {/* 본문 */}
-      <div className="p-3">
+      <div className={cn('p-3', moveMode && 'pointer-events-none')}>
         {card.kind === 'link' ? (
           <div className="space-y-2">
             {card.image_url && (
