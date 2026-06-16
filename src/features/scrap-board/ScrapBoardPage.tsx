@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type MouseEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import {
   ReactFlow,
   Background,
@@ -7,6 +7,7 @@ import {
   type Node,
   type NodeChange,
   type NodeTypes,
+  type ReactFlowInstance,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { supabase } from '@/lib/supabase'
@@ -36,6 +37,19 @@ export function ScrapBoardPage() {
   const [url, setUrl] = useState('')
   const [scraping, setScraping] = useState(false)
   const [menu, setMenu] = useState<{ x: number; y: number; card: ScrapCard } | null>(null)
+  const rfRef = useRef<ReactFlowInstance | null>(null)
+  const canvasRef = useRef<HTMLDivElement>(null)
+
+  // 현재 화면 중앙을 캔버스 좌표로 변환해 새 카드 위치 계산 (약간 stagger)
+  function centerPos() {
+    const inst = rfRef.current
+    const el = canvasRef.current
+    if (!inst || !el) return { pos_x: 80, pos_y: 80 }
+    const r = el.getBoundingClientRect()
+    const p = inst.screenToFlowPosition({ x: r.left + r.width / 2, y: r.top + r.height / 2 })
+    const jitter = (cards.length % 5) * 16
+    return { pos_x: Math.round(p.x - 120 + jitter), pos_y: Math.round(p.y - 70 + jitter) }
+  }
 
   const cards = useMemo(() => list.data ?? [], [list.data])
 
@@ -78,21 +92,14 @@ export function ScrapBoardPage() {
   }
 
   function addMemo() {
-    const n = cards.length
-    create.mutate({
-      kind: 'memo',
-      color: 'yellow',
-      pos_x: 80 + (n % 6) * 28,
-      pos_y: 80 + (Math.floor(n / 6) % 6) * 28,
-    })
+    create.mutate({ kind: 'memo', color: 'yellow', ...centerPos() })
   }
 
   async function scrapeUrl() {
     const target = url.trim()
     if (!target) return
     setScraping(true)
-    const n = cards.length
-    const pos = { pos_x: 80 + (n % 6) * 28, pos_y: 80 + (Math.floor(n / 6) % 6) * 28 }
+    const pos = centerPos()
     try {
       const { data, error } = await supabase.functions.invoke('og-scrape', {
         body: { url: target },
@@ -151,7 +158,7 @@ export function ScrapBoardPage() {
       </div>
 
       {/* 캔버스 */}
-      <div className="relative min-h-0 flex-1">
+      <div ref={canvasRef} className="relative min-h-0 flex-1">
         {list.isLoading ? (
           <div className="flex h-full items-center justify-center">
             <Spinner />
@@ -159,6 +166,7 @@ export function ScrapBoardPage() {
         ) : (
           <ReactFlow
             nodes={nodes}
+            onInit={(inst) => (rfRef.current = inst)}
             onNodesChange={handleNodesChange}
             onNodeContextMenu={onNodeContextMenu}
             onNodesDelete={onNodesDelete}
