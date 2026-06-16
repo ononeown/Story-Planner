@@ -6,11 +6,13 @@ import { cn } from '@/lib/cn'
 
 interface Props {
   fragment: Fragment
+  /** 일괄 접기/펼치기 신호 (seq 가 바뀌면 collapsed 적용) */
+  bulk: { collapsed: boolean; seq: number }
   onChange: (patch: Partial<Fragment>) => void
   onDelete: () => void
 }
 
-export function FragmentCard({ fragment, onChange, onDelete }: Props) {
+export function FragmentCard({ fragment, bulk, onChange, onDelete }: Props) {
   const [title, setTitle] = useState(fragment.title ?? '')
   const [content, setContent] = useState(fragment.content ?? '')
   const [collapsed, setCollapsedState] = useState(fragment.collapsed ?? false)
@@ -29,6 +31,13 @@ export function FragmentCard({ fragment, onChange, onDelete }: Props) {
       return next
     })
   }
+
+  // 일괄 접기/펼치기 신호 적용
+  useEffect(() => {
+    if (bulk.seq === 0) return
+    setCollapsedState(bulk.collapsed)
+    onChange({ collapsed: bulk.collapsed })
+  }, [bulk.seq]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // 내용 양에 맞춰 높이 자동 확장. 펼칠 때도 재계산.
   useEffect(() => {

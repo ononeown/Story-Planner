@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { useProject } from '@/features/projects/ProjectProvider'
 import { useFragments } from './useFragments'
 import { FragmentCard } from './FragmentCard'
@@ -12,6 +13,23 @@ export function FragmentsPage() {
   const { project } = useProject()
   const { list, create, update, remove } = useFragments(project.id)
   const fragments = list.data ?? []
+
+  // 일괄 접기/펼치기 신호 (Ctrl+] 모두 접기 / Ctrl+[ 모두 펼치기)
+  const [bulk, setBulk] = useState({ collapsed: false, seq: 0 })
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (!(e.ctrlKey || e.metaKey)) return
+      if (e.key === ']') {
+        e.preventDefault()
+        setBulk((b) => ({ collapsed: true, seq: b.seq + 1 }))
+      } else if (e.key === '[') {
+        e.preventDefault()
+        setBulk((b) => ({ collapsed: false, seq: b.seq + 1 }))
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   return (
     <div className="flex h-full flex-col">
@@ -45,6 +63,7 @@ export function FragmentsPage() {
               <div key={f.id} className="mb-4">
                 <FragmentCard
                   fragment={f}
+                  bulk={bulk}
                   onChange={(patch) => update.mutate({ id: f.id, patch })}
                   onDelete={() => remove.mutate(f.id)}
                 />
