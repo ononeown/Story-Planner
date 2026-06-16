@@ -59,9 +59,16 @@ function nodeIntersection(a: InternalNode, b: InternalNode) {
   return { x: aw * (m * xx + m * yy) + ax, y: ah * (-m * xx + m * yy) + ay }
 }
 
+function nodeCenter(n: InternalNode) {
+  return {
+    x: n.internals.positionAbsolute.x + (n.measured.width ?? 0) / 2,
+    y: n.internals.positionAbsolute.y + (n.measured.height ?? 0) / 2,
+  }
+}
+
 interface RelData {
   label: string
-  dir: number // -1 | 0 | 1 (양방향이면 좌우로 분리)
+  bidir: boolean // 양방향이면 한 쌍이 서로 반대로 휘도록
   onChange: (v: string) => void
   onDelete: () => void
   [k: string]: unknown
@@ -82,16 +89,23 @@ function RelationEdge({ id, source, target, markerEnd, data, selected }: EdgePro
 
   const mx = (sourceX + targetX) / 2
   const my = (sourceY + targetY) / 2
-  const dx = targetX - sourceX
-  const dy = targetY - sourceY
-  const len = Math.hypot(dx, dy) || 1
-  const off = 38 * (d.dir ?? 0)
-  const cx = mx + (-dy / len) * off
-  const cy = my + (dx / len) * off
-  const path =
-    (d.dir ?? 0) === 0
-      ? `M ${sourceX},${sourceY} L ${targetX},${targetY}`
-      : `M ${sourceX},${sourceY} Q ${cx},${cy} ${targetX},${targetY}`
+
+  // 양방향: 작은 id 기준 고정 수직 방향 + 방향별 부호 → 두 라벨이 반드시 반대쪽으로 벌어짐
+  let cx = mx, cy = my
+  if (d.bidir) {
+    const minIsSource = source < target
+    const cMin = nodeCenter(minIsSource ? sourceNode : targetNode)
+    const cMax = nodeCenter(minIsSource ? targetNode : sourceNode)
+    const ddx = cMax.x - cMin.x
+    const ddy = cMax.y - cMin.y
+    const dlen = Math.hypot(ddx, ddy) || 1
+    const off = 48 * (minIsSource ? 1 : -1)
+    cx = mx + (-ddy / dlen) * off
+    cy = my + (ddx / dlen) * off
+  }
+  const path = d.bidir
+    ? `M ${sourceX},${sourceY} Q ${cx},${cy} ${targetX},${targetY}`
+    : `M ${sourceX},${sourceY} L ${targetX},${targetY}`
 
   return (
     <>
@@ -155,8 +169,7 @@ export function RelationshipMap({ workspaceId }: { workspaceId: string }) {
   // 양방향 여부 판정 → 좌우로 분리할 방향(dir) 부여
   const pairSet = new Set(rels.map((r) => `${r.from_character_id}|${r.to_character_id}`))
   const edges: Edge[] = rels.map((r) => {
-    const reverse = pairSet.has(`${r.to_character_id}|${r.from_character_id}`)
-    const dir = reverse ? (r.from_character_id < r.to_character_id ? 1 : -1) : 0
+    const bidir = pairSet.has(`${r.to_character_id}|${r.from_character_id}`)
     return {
       id: r.id,
       source: r.from_character_id,
@@ -165,7 +178,7 @@ export function RelationshipMap({ workspaceId }: { workspaceId: string }) {
       markerEnd: { type: MarkerType.ArrowClosed, color: 'var(--color-ink-faint)' },
       data: {
         label: r.label ?? '',
-        dir,
+        bidir,
         onChange: (v: string) => relations.update.mutate({ id: r.id, patch: { label: v } }),
         onDelete: () => relations.remove.mutate(r.id),
       } satisfies RelData,
