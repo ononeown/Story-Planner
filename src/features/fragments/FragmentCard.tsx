@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import type { Fragment } from '@/types/database'
 import { useDebouncedCallback } from '@/lib/useDebouncedCallback'
-import { TrashIcon, SparkleIcon, ChevronIcon } from '@/components/ui/icons'
+import { TrashIcon, SparkleIcon, ChevronIcon, PinIcon } from '@/components/ui/icons'
 import { cn } from '@/lib/cn'
 
 interface Props {
@@ -85,8 +85,20 @@ export function FragmentCard({ fragment, bulk, onChange, onDelete }: Props) {
             save({ title: e.target.value })
           }}
           placeholder=""
-          className="w-full bg-transparent text-sm font-semibold text-ink outline-none"
+          className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-ink outline-none"
         />
+        <button
+          onClick={() => onChange({ pinned: !fragment.pinned })}
+          className={cn(
+            'mt-0.5 shrink-0 rounded p-0.5 transition-colors',
+            fragment.pinned
+              ? 'text-accent'
+              : 'text-ink-faint opacity-0 hover:text-ink group-hover:opacity-100',
+          )}
+          aria-label={fragment.pinned ? '핀 해제' : '핀 고정'}
+        >
+          <PinIcon width={14} height={14} />
+        </button>
       </div>
       {!collapsed && (
         <textarea

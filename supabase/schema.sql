@@ -238,6 +238,7 @@ create table if not exists public.fragments (
   content      text,
   color        text not null default 'yellow',
   collapsed    boolean not null default false,
+  pinned       boolean not null default false,
   sort_order   int not null default 0,
   created_at   timestamptz not null default now()
 );

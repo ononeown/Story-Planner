@@ -6,13 +6,15 @@ import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Spinner } from '@/components/ui/Spinner'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { PlusIcon } from '@/components/ui/icons'
+import { PlusIcon, PinIcon } from '@/components/ui/icons'
 
 /** 장면 조각 — 보고 싶은 장면을 조각글로 적어 사건으로 디벨롭 */
 export function FragmentsPage() {
   const { project } = useProject()
   const { list, create, update, remove } = useFragments(project.id)
   const fragments = list.data ?? []
+  const pinned = fragments.filter((f) => f.pinned)
+  const rest = fragments.filter((f) => !f.pinned)
 
   // 일괄 접기/펼치기 신호 (Ctrl+] 모두 접기 / Ctrl+[ 모두 펼치기)
   const [bulk, setBulk] = useState({ collapsed: false, seq: 0 })
@@ -42,12 +44,12 @@ export function FragmentsPage() {
         }
       />
 
-      <div className="flex-1 overflow-y-auto px-8 py-8">
-        {list.isLoading ? (
-          <div className="flex justify-center py-16">
-            <Spinner />
-          </div>
-        ) : fragments.length === 0 ? (
+      {list.isLoading ? (
+        <div className="flex flex-1 justify-center py-16">
+          <Spinner />
+        </div>
+      ) : fragments.length === 0 ? (
+        <div className="flex-1 px-8 py-8">
           <EmptyState
             title="아직 조각글이 없습니다"
             hint="떠오르는 장면·대사·상황을 부담 없이 적어두면, 나중에 사건으로 발전시키기 좋아요."
@@ -57,21 +59,48 @@ export function FragmentsPage() {
               </Button>
             }
           />
-        ) : (
-          <div className="mx-auto max-w-5xl [column-fill:_balance] gap-4 [column-gap:1rem] sm:columns-2 lg:columns-3">
-            {fragments.map((f) => (
-              <div key={f.id} className="mb-4">
+        </div>
+      ) : (
+        <div className="flex min-h-0 flex-1">
+          {/* 핀 고정 열 */}
+          {pinned.length > 0 && (
+            <div className="w-80 shrink-0 space-y-3 overflow-y-auto border-r border-line bg-surface/30 px-4 py-6">
+              <div className="flex items-center gap-1.5 px-1 text-[12px] font-semibold text-ink-muted">
+                <PinIcon width={13} height={13} className="text-accent" /> 핀
+              </div>
+              {pinned.map((f) => (
                 <FragmentCard
+                  key={f.id}
                   fragment={f}
                   bulk={bulk}
                   onChange={(patch) => update.mutate({ id: f.id, patch })}
                   onDelete={() => remove.mutate(f.id)}
                 />
+              ))}
+            </div>
+          )}
+
+          {/* 일반 조각 갤러리 */}
+          <div className="min-w-0 flex-1 overflow-y-auto px-8 py-8">
+            {rest.length === 0 ? (
+              <p className="text-sm text-ink-faint">핀 고정한 조각만 있습니다.</p>
+            ) : (
+              <div className="[column-fill:_balance] gap-4 [column-gap:1rem] sm:columns-2 xl:columns-3">
+                {rest.map((f) => (
+                  <div key={f.id} className="mb-4">
+                    <FragmentCard
+                      fragment={f}
+                      bulk={bulk}
+                      onChange={(patch) => update.mutate({ id: f.id, patch })}
+                      onDelete={() => remove.mutate(f.id)}
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }

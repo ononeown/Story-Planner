@@ -152,6 +152,7 @@ export interface Fragment {
   content: string | null
   color: StickyColor
   collapsed: boolean
+  pinned: boolean
   sort_order: number
   created_at: string
 }
